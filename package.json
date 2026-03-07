@@ -1,0 +1,30 @@
+{
+  "name": "restaurant-supply-chain-finance",
+  "version": "1.0.0",
+  "description": "餐饮供应链金融赋能平台",
+  "main": "electron/main.js",
+  "scripts": {
+    "start": "electron .",
+    "build:win": "electron-builder --win",
+    "build:mac": "electron-builder --mac"
+  },
+  "build": {
+    "appId": "com.restaurant.finance",
+    "productName": "餐饮供应链金融平台",
+    "directories": {
+      "output": "dist"
+    },
+    "win": {
+      "target": ["nsis"]
+    },
+    "mac": {
+      "target": ["dmg"]
+    }
+  },
+  "dependencies": {
+    "electron": "^28.0.0"
+  },
+  "devDependencies": {
+    "electron-builder": "^24.9.1"
+  }
+}

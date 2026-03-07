@@ -1,0 +1,37 @@
+# Dependencies
+node_modules/
+frontend/node_modules/
+
+# Build output
+dist/
+*.egg-info/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Database
+*.db
+*.sqlite
+
+# Virtual environment
+venv/
+env/
+*.venv
+
+# Pytest
+.pytest_cache/
+__pycache__/
+
+# TypeScript
+*.tsbuildinfo
