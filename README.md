@@ -1,134 +1,55 @@
-# 基于多维数据验证的餐饮供应链金融赋能平台
+# 🍽️ 餐饮供应链金融赋能平台
 
-餐饮供应链金融赋能平台是一个集成了多维数据验证的风险控制与信贷评估系统。通过整合商户流水、客流数据、供应链交易等多维度信息，实现对餐饮企业的精准信用评估与智能风控。
+基于多维数据验证的餐饮供应链金融赋能平台 - 商用级风控与信贷评估系统。
 
-## 📁 目录结构
+## 📥 下载安装
 
-```
-餐饮供应链金融赋能平台/
-├── backend/                    # 后端服务
-│   ├── api/                    # API 接口层
-│   │   ├── auth.py             # 认证接口
-│   │   ├── merchant.py         # 商户管理接口
-│   │   └── credit.py           # 信贷评估接口
-│   ├── services/               # 业务服务层
-│   │   ├── risk_control.py     # 风控服务
-│   │   └── rtv_model.py        # RTV模型服务
-│   ├── app.py                  # Flask 应用入口
-│   ├── config.py               # 配置文件
-│   ├── models.py               # 数据模型
-│   └── requirements.txt        # Python 依赖
-├── frontend/                    # 前端页面
-│   ├── index.html              # 首页/登录页
-│   ├── dashboard.html          # 控制台页面
-│   ├── js/                     # JavaScript 脚本
-│   └── css/                    # 样式文件
-└── cv/                          # 计算机视觉模块
-    └── 客流分析/                # 客流分析系统
-        ├── detector.py         # 目标检测
-        ├── tracker.py          # 目标跟踪
-        ├── counter.py          # 客流计数
-        ├── edge_runner.py      # Edge 端运行器
-        └── main.py             # 主程序
-```
+### macOS 版本
+点击下载：[餐饮供应链金融平台-macOS.zip](https://github.com/JACKYwyj/restaurant-supply-chain-finance/releases/download/v1.0.0/%E9%A4%90%E9%A5%AE%E4%BE%9B%E5%BA%94%E9%93%BA%E9%93%81%E9%87%91%E8%B4%A7%E5%B9%B3%E5%8F%B0%E5%8F%B0-macOS.zip)
+
+### Windows 版本
+（待构建）
+
+---
 
 ## 🚀 快速开始
 
-### 前置要求
+### macOS 安装
+1. 下载 macOS 版本
+2. 解压 zip 文件
+3. 双击打开应用
 
-- Python 3.8+
-- Node.js 16+ (可选)
-- OpenCV 4.x (用于客流分析)
+### 浏览器访问
+直接在浏览器打开 `frontend/index.html`
 
-### 安装依赖
-
+### 后端服务
 ```bash
 cd backend
 pip install -r requirements.txt
-```
-
-### 启动服务
-
-```bash
-# 启动后端服务
-cd backend
 python app.py
 ```
 
-后端服务默认运行在 `http://localhost:5000`
+---
 
-### 访问前端
+## 📁 项目结构
 
-直接在浏览器中打开 `frontend/index.html` 即可访问系统。
+```
+├── backend/           # Flask 后端
+│   ├── api/          # API 接口
+│   ├── services/      # 业务服务
+│   └── models.py      # 数据模型
+├── frontend/          # Web 前端
+│   ├── index.html     # 登录页
+│   └── dashboard.html # 管理后台
+├── cv/               # 客流分析 CV 模块
+└── electron/          # 桌面应用入口
+```
 
-## 📦 各模块说明
-
-### 1. 后端服务 (backend/)
-
-#### API 层 (`api/`)
-- **auth.py** - 用户认证、登录登出、JWT 令牌管理
-- **merchant.py** - 商户信息管理、流水数据接入
-- **credit.py** - 信贷评估申请、额度查询、还款管理
-
-#### 服务层 (`services/`)
-- **risk_control.py** - 风险控制引擎，多维数据交叉验证
-- **rtv_model.py** - RTV(Remaining to Value) 模型，评估存货价值
-
-#### 核心模块
-- **app.py** - Flask 应用入口，路由配置
-- **config.py** - 系统配置，数据库连接等
-- **models.py** - SQLAlchemy 数据模型定义
-
-### 2. 前端 (frontend/)
-
-- **index.html** - 系统登录页
-- **dashboard.html** - 管理控制台，包含商户管理、信贷管理、风控监控等功能
-- **js/** - 前端交互逻辑
-- **css/** - 样式文件
-
-### 3. 计算机视觉 (cv/)
-
-#### 客流分析系统
-基于深度学习的餐饮门店客流分析解决方案：
-
-- **detector.py** - YOLO/SSD 目标检测模型，用于检测进出店顾客
-- **tracker.py** - SORT/DeepSORT 目标跟踪，维持顾客轨迹
-- **counter.py** - 客流统计计数逻辑
-- **edge_runner.py** - 边缘设备部署运行器
-- **main.py** - 主程序入口
+---
 
 ## 🛠 技术栈
 
-### 后端
-- **Framework**: Flask 2.x
-- **ORM**: SQLAlchemy
-- **Authentication**: JWT (PyJWT)
-- **Data Validation**: Marshmallow
-
-### 前端
-- **HTML5** + **CSS3**
-- **JavaScript** (原生 ES6+)
-- **Chart.js** - 数据可视化
-
-### 计算机视觉
-- **OpenCV 4.x** - 图像处理
-- **YOLO/SSD** - 目标检测
-- **SORT/DeepSORT** - 多目标跟踪
-
-### 数据存储
-- **SQLite** (开发环境)
-- 支持 MySQL/PostgreSQL (生产环境)
-
-## 📋 环境变量
-
-在 `backend/config.py` 中配置：
-
-```python
-SECRET_KEY = "your-secret-key"
-DATABASE_URI = "sqlite:///app.db"
-JWT_SECRET = "your-jwt-secret"
-```
-
-## 📄 许可证
-
-MIT License
+- **后端**: Flask + SQLAlchemy + JWT
+- **前端**: HTML5 + CSS3 + JavaScript
+- **CV**: OpenCV + YOLO
+- **桌面**: Electron
