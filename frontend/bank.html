@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>银行/投资者入口 - 餐饮供应链金融平台</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- 页面加载动画 -->
+    <div class="page-loader">
+        <div class="loader-content">
+            <div class="loader-logo">🏦</div>
+            <div class="loader-text">银行入口</div>
+            <div class="loader-bar">
+                <div class="loader-progress"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="page-transition">
+        <div class="hero-section" style="min-height: 100vh;">
+            <div class="hero-content">
+                <div class="logo fade-in-up" style="animation-delay: 0.1s">
+                    <span class="logo-icon">🏦</span>
+                    <span class="logo-text">餐链金融</span>
+                </div>
+                
+                <h1 class="main-title fade-in-up" style="animation-delay: 0.2s">银行 / 投资者入口</h1>
+                <p class="subtitle fade-in-up" style="animation-delay: 0.3s">查看餐饮企业投资机会，进行风险评估与投资决策</p>
+                
+                <div class="features fade-in-up" style="animation-delay: 0.4s">
+                    <div class="feature-card">
+                        <div class="feature-icon">📊</div>
+                        <h3>投资机会</h3>
+                        <p>浏览优质餐饮企业融资项目，选择心仪投资标的</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">📈</div>
+                        <h3>风险评估</h3>
+                        <p>基于多维数据验证，精准评估企业信用风险</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">💼</div>
+                        <h3>资产管理</h3>
+                        <p>实时监控投资组合收益与风险状况</p>
+                    </div>
+                </div>
+
+                <div class="login-section fade-in-up" style="animation-delay: 0.5s">
+                    <a href="#" class="login-btn primary">登录银行账户</a>
+                    <a href="index.html" class="login-btn secondary">返回首页</a>
+                </div>
+
+                <!-- 投资数据展示 -->
+                <div class="login-section fade-in-up" style="animation-delay: 0.6s; margin-top: 60px;">
+                    <div class="stats-grid" style="width: 100%; max-width: 800px;">
+                        <div class="stat-card">
+                            <div class="stat-label">可投资金</div>
+                            <div class="stat-value">¥5,000,000</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">投资项目</div>
+                            <div class="stat-value">28</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">平均收益</div>
+                            <div class="stat-value">12.5%</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p>© 2026 餐饮供应链金融赋能平台 | 让餐饮融资更简单</p>
+    </footer>
+
+    <script>
+        // 页面加载完成后隐藏加载动画
+        window.addEventListener('load', function() {
+            setTimeout(function() {
+                document.querySelector('.page-loader').style.opacity = '0';
+                setTimeout(function() {
+                    document.querySelector('.page-loader').style.display = 'none';
+                }, 500);
+            }, 1500);
+        });
+    </script>
+</body>
+</html>

@@ -2,6 +2,7 @@
   "name": "restaurant-supply-chain-finance",
   "version": "1.0.0",
   "description": "餐饮供应链金融赋能平台",
+  "author": "Jacky Wang",
   "main": "electron/main.js",
   "scripts": {
     "start": "electron .",
@@ -21,10 +22,8 @@
       "target": ["dmg"]
     }
   },
-  "dependencies": {
-    "electron": "^28.0.0"
-  },
   "devDependencies": {
+    "electron": "^28.0.0",
     "electron-builder": "^24.9.1"
   }
 }
