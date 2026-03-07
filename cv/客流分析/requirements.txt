@@ -1,0 +1,27 @@
+# 餐饮客流分析系统 - 依赖列表
+# 边缘端轻量化部署
+
+# 核心依赖
+opencv-python>=4.8.0
+numpy>=1.24.0
+
+# YOLO目标检测
+ultralytics>=8.0.0
+
+# 可选依赖
+
+# Flask API服务（可选）
+# flask>=2.3.0
+
+# 视频处理（可选）
+# opencv-contrib-python>=4.8.0  # 包含额外算法
+
+# 边缘端优化
+# onnxruntime>=1.15.0  # ONNX推理加速
+# openvino>=2023.0    # Intel边缘计算
+
+# 树莓派/Jetson特定
+# tflite-runtime>=2.12.0  # 树莓派TFLite
+
+# 日志
+# python-json-logger>=2.0.0

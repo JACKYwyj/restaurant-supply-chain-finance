@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>商户Dashboard - 餐饮供应链金融赋能平台</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+</head>
+<body class="dashboard-body">
+    <!-- 页面加载动画 -->
+    <div class="page-loader dashboard-loader">
+        <div class="loader-content">
+            <div class="loader-logo">🍜</div>
+            <div class="loader-text">加载中...</div>
+            <div class="loader-spinner"></div>
+        </div>
+    </div>
+    
+    <!-- 页面进入动画容器 -->
+    <div class="page-enter-overlay"></div>
+
+    <!-- 顶部导航 -->
+    <header class="dashboard-header">
+        <div class="logo">
+            <span class="logo-icon">🍜</span>
+            <span class="logo-text">餐链金融</span>
+        </div>
+        <div class="user-info">
+            <div class="user-avatar">张</div>
+            <span class="user-name">张老板的小店</span>
+        </div>
+    </header>
+
+    <div class="dashboard-container">
+        <!-- 侧边栏 -->
+        <aside class="sidebar">
+            <ul class="sidebar-menu">
+                <li><a href="#" class="active"><span class="icon">📊</span>数据概览</a></li>
+                <li><a href="#"><span class="icon">💰</span>流水管理</a></li>
+                <li><a href="#"><span class="icon">👥</span>客流分析</a></li>
+                <li><a href="#"><span class="icon">🏦</span>融资授信</a></li>
+                <li><a href="#"><span class="icon">⚠️</span>预警中心</a></li>
+                <li><a href="#"><span class="icon">📝</span>资质认证</a></li>
+                <li><a href="#"><span class="icon">⚙️</span>设置</a></li>
+            </ul>
+        </aside>
+
+        <!-- 主内容 -->
+        <main class="main-content">
+            <h1 class="page-title">数据概览</h1>
+
+            <!-- 统计卡片 -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label">今日客流</div>
+                    <div class="stat-value">328</div>
+                    <div class="stat-change up">↑ 12% 较昨日</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">今日流水</div>
+                    <div class="stat-value">¥12,680</div>
+                    <div class="stat-change up">↑ 8% 较昨日</div>
+                </div>
+                <div class="stat-card highlight">
+                    <div class="stat-label">授信额度</div>
+                    <div class="stat-value">¥500,000</div>
+                    <div class="stat-change">可用 ¥320,000</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">信用评分</div>
+                    <div class="stat-value">A级</div>
+                    <div class="stat-change up">↑ 提升中</div>
+                </div>
+            </div>
+
+            <!-- 图表区域 -->
+            <div class="charts-section">
+                <!-- 客流趋势 -->
+                <div class="chart-card">
+                    <div class="chart-title">
+                        <span>本周客流趋势</span>
+                        <small style="color: rgba(255,255,255,0.5)">单位：人次</small>
+                    </div>
+                    <div class="chart-container" id="customerChart">
+                        <div class="chart-bar" style="height: 60%" data-value="196">
+                            <div class="chart-label">周一</div>
+                        </div>
+                        <div class="chart-bar" style="height: 75%" data-value="245">
+                            <div class="chart-label">周二</div>
+                        </div>
+                        <div class="chart-bar" style="height: 85%" data-value="278">
+                            <div class="chart-label">周三</div>
+                        </div>
+                        <div class="chart-bar" style="height: 70%" data-value="229">
+                            <div class="chart-label">周四</div>
+                        </div>
+                        <div class="chart-bar" style="height: 90%" data-value="295">
+                            <div class="chart-label">周五</div>
+                        </div>
+                        <div class="chart-bar" style="height: 100%" data-value="328">
+                            <div class="chart-label">周六</div>
+                        </div>
+                        <div class="chart-bar" style="height: 65%" data-value="213">
+                            <div class="chart-label">周日</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 实时预警 -->
+                <div class="chart-card">
+                    <div class="chart-title">
+                        <span>实时预警</span>
+                        <span style="color: #e74c3c; font-size: 12px;">● 在线</span>
+                    </div>
+                    <div class="alerts-list">
+                        <div class="alert-item warning">
+                            <span class="alert-icon">⚠️</span>
+                            <div class="alert-content">
+                                <div class="alert-title">流水波动提醒</div>
+                                <div class="alert-desc">今日流水较昨日下降15%</div>
+                            </div>
+                            <div class="alert-time">10分钟前</div>
+                        </div>
+                        <div class="alert-item info">
+                            <span class="alert-icon">ℹ️</span>
+                            <div class="alert-content">
+                                <div class="alert-title">融资申请通过</div>
+                                <div class="alert-desc">您的50万授信申请已获批</div>
+                            </div>
+                            <div class="alert-time">2小时前</div>
+                        </div>
+                        <div class="alert-item danger">
+                            <span class="alert-icon">🔴</span>
+                            <div class="alert-content">
+                                <div class="alert-title">征信预警</div>
+                                <div class="alert-desc">您的信用评分即将调整</div>
+                            </div>
+                            <div class="alert-time">昨天</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 流水数据 -->
+            <div class="chart-card">
+                <div class="chart-title">
+                    <span>近期流水记录</span>
+                    <small style="color: rgba(255,255,255,0.5)">最近7天</small>
+                </div>
+                <table class="transaction-table">
+                    <thead>
+                        <tr>
+                            <th>时间</th>
+                            <th>类型</th>
+                            <th>金额</th>
+                            <th>对方账户</th>
+                            <th>状态</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>今天 14:30</td>
+                            <td>收入</td>
+                            <td class="amount-income">+¥680</td>
+                            <td>美团外卖</td>
+                            <td style="color: #2ecc71">已入账</td>
+                        </tr>
+                        <tr>
+                            <td>今天 12:15</td>
+                            <td>收入</td>
+                            <td class="amount-income">+¥1,280</td>
+                            <td>店内消费</td>
+                            <td style="color: #2ecc71">已入账</td>
+                        </tr>
+                        <tr>
+                            <td>今天 09:00</td>
+                            <td>支出</td>
+                            <td class="amount-expense">-¥2,500</td>
+                            <td>食材采购-供应商A</td>
+                            <td style="color: #f39c12">处理中</td>
+                        </tr>
+                        <tr>
+                            <td>昨天 18:20</td>
+                            <td>收入</td>
+                            <td class="amount-income">+¥980</td>
+                            <td>饿了么外卖</td>
+                            <td style="color: #2ecc71">已入账</td>
+                        </tr>
+                        <tr>
+                            <td>昨天 11:30</td>
+                            <td>支出</td>
+                            <td class="amount-expense">-¥5,000</td>
+                            <td>房租-物业</td>
+                            <td style="color: #2ecc71">已入账</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </main>
+    </div>
+
+    <script src="js/app.js"></script>
+</body>
+</html>

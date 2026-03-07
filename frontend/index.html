@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>基于多维数据验证的餐饮供应链金融赋能平台</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- 页面加载动画 -->
+    <div class="page-loader">
+        <div class="loader-content">
+            <div class="loader-logo">🍜</div>
+            <div class="loader-text">餐链金融</div>
+            <div class="loader-bar">
+                <div class="loader-progress"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="page-transition">
+        <div class="hero-section">
+            <div class="hero-content">
+                <div class="logo fade-in-up" style="animation-delay: 0.1s">
+                    <span class="logo-icon">🍜</span>
+                    <span class="logo-text">餐链金融</span>
+                </div>
+                <h1 class="main-title fade-in-up" style="animation-delay: 0.2s">基于多维数据验证的<br>餐饮供应链金融赋能平台</h1>
+                <p class="subtitle fade-in-up" style="animation-delay: 0.3s">连接餐饮商户、金融机构与投资者的智能供应链金融平台</p>
+                
+                <div class="features">
+                    <div class="feature-card fade-in-up" style="animation-delay: 0.4s">
+                        <div class="feature-icon">💰</div>
+                        <h3>实时现金流分析</h3>
+                        <p>多维度数据验证，实时监控现金流状况</p>
+                    </div>
+                    <div class="feature-card fade-in-up" style="animation-delay: 0.5s">
+                        <div class="feature-icon">🤖</div>
+                        <h3>AI客流监控</h3>
+                        <p>智能客流分析，精准预测经营趋势</p>
+                    </div>
+                    <div class="feature-card fade-in-up" style="animation-delay: 0.6s">
+                        <div class="feature-icon">🏦</div>
+                        <h3>供应链金融</h3>
+                        <p>快速授信融资，助力餐饮供应链发展</p>
+                    </div>
+                </div>
+
+                <div class="login-section fade-in-up" style="animation-delay: 0.7s">
+                    <h2>选择您的身份</h2>
+                    <div class="login-buttons">
+                        <a href="dashboard.html" class="btn btn-merchant page-transition-btn" data-target="dashboard.html">
+                            <span class="btn-icon">🏪</span>
+                            <span class="btn-text">
+                                <strong>商户入口</strong>
+                                <small>登录管理您的店铺</small>
+                            </span>
+                        </a>
+                        <a href="#" class="btn btn-bank">
+                            <span class="btn-icon">🏦</span>
+                            <span class="btn-text">
+                                <strong>银行/投资者入口</strong>
+                                <small>查看投资机会</small>
+                            </span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <p>© 2026 餐饮供应链金融赋能平台 | 让餐饮融资更简单</p>
+    </footer>
+
+    <script>
+        // 页面加载动画
+        window.addEventListener('load', function() {
+            setTimeout(function() {
+                document.querySelector('.page-loader').classList.add('loaded');
+                document.querySelector('.page-loader').style.opacity = '0';
+                setTimeout(function() {
+                    document.querySelector('.page-loader').style.display = 'none';
+                }, 500);
+            }, 800);
+        });
+        
+        // 页面过渡动画
+        document.addEventListener('DOMContentLoaded', function() {
+            const transitionBtns = document.querySelectorAll('.page-transition-btn');
+            
+            transitionBtns.forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const targetUrl = this.getAttribute('data-target') || this.getAttribute('href');
+                    
+                    // 创建页面退出动画
+                    const overlay = document.createElement('div');
+                    overlay.className = 'page-exit-overlay';
+                    overlay.style.cssText = `
+                        position: fixed;
+                        top: 0;
+                        left: 0;
+                        width: 100%;
+                        height: 100%;
+                        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+                        z-index: 9999;
+                        opacity: 0;
+                        transition: opacity 0.3s ease;
+                    `;
+                    document.body.appendChild(overlay);
+                    
+                    // 淡入遮罩
+                    requestAnimationFrame(() => {
+                        overlay.style.opacity = '1';
+                    });
+                    
+                    // 页面内容淡出
+                    document.querySelector('.hero-section').style.opacity = '0';
+                    document.querySelector('.hero-section').style.transform = 'scale(0.95)';
+                    document.querySelector('.hero-section').style.transition = 'all 0.3s ease';
+                    
+                    // 动画完成后跳转
+                    setTimeout(() => {
+                        window.location.href = targetUrl;
+                    }, 400);
+                });
+            });
+        });
+    </script>
+</body>
+</html>
