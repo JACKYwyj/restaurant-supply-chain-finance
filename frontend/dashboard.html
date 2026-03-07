@@ -8,18 +8,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
 </head>
 <body class="dashboard-body">
-    <!-- 页面加载动画 -->
-    <div class="page-loader dashboard-loader">
-        <div class="loader-content">
-            <div class="loader-logo">🍜</div>
-            <div class="loader-text">加载中...</div>
-            <div class="loader-spinner"></div>
-        </div>
-    </div>
-    
-    <!-- 页面进入动画容器 -->
-    <div class="page-enter-overlay"></div>
-
     <!-- 顶部导航 -->
     <header class="dashboard-header">
         <div class="logo">
@@ -36,91 +24,68 @@
         <!-- 侧边栏 -->
         <aside class="sidebar">
             <ul class="sidebar-menu">
-                <li><a href="#" class="active"><span class="icon">📊</span>数据概览</a></li>
-                <li><a href="#"><span class="icon">💰</span>流水管理</a></li>
-                <li><a href="#"><span class="icon">👥</span>客流分析</a></li>
-                <li><a href="#"><span class="icon">🏦</span>融资授信</a></li>
-                <li><a href="#"><span class="icon">⚠️</span>预警中心</a></li>
-                <li><a href="#"><span class="icon">📝</span>资质认证</a></li>
-                <li><a href="#"><span class="icon">⚙️</span>设置</a></li>
+                <li><a href="#overview" class="active" data-page="overview"><span class="icon">📊</span>数据概览</a></li>
+                <li><a href="#transactions" data-page="transactions"><span class="icon">💰</span>流水管理</a></li>
+                <li><a href="#customers" data-page="customers"><span class="icon">👥</span>客流分析</a></li>
+                <li><a href="#credit" data-page="credit"><span class="icon">🏦</span>融资授信</a></li>
+                <li><a href="#alerts" data-page="alerts"><span class="icon">⚠️</span>预警中心</a></li>
+                <li><a href="#certification" data-page="certification"><span class="icon">📝</span>资质认证</a></li>
+                <li><a href="#settings" data-page="settings"><span class="icon">⚙️</span>设置</a></li>
+                <li><a href="index.html"><span class="icon">🚪</span>退出登录</a></li>
             </ul>
         </aside>
 
         <!-- 主内容 -->
         <main class="main-content">
-            <h1 class="page-title">数据概览</h1>
-
-            <!-- 统计卡片 -->
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <div class="stat-label">今日客流</div>
-                    <div class="stat-value">328</div>
-                    <div class="stat-change up">↑ 12% 较昨日</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-label">今日流水</div>
-                    <div class="stat-value">¥12,680</div>
-                    <div class="stat-change up">↑ 8% 较昨日</div>
-                </div>
-                <div class="stat-card highlight">
-                    <div class="stat-label">授信额度</div>
-                    <div class="stat-value">¥500,000</div>
-                    <div class="stat-change">可用 ¥320,000</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-label">信用评分</div>
-                    <div class="stat-value">A级</div>
-                    <div class="stat-change up">↑ 提升中</div>
-                </div>
-            </div>
-
-            <!-- 图表区域 -->
-            <div class="charts-section">
-                <!-- 客流趋势 -->
-                <div class="chart-card">
-                    <div class="chart-title">
-                        <span>本周客流趋势</span>
-                        <small style="color: rgba(255,255,255,0.5)">单位：人次</small>
+            <!-- 数据概览 -->
+            <section id="overview" class="page-section active">
+                <h1 class="page-title">数据概览</h1>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-label">今日客流</div>
+                        <div class="stat-value">328</div>
+                        <div class="stat-change up">↑ 12% 较昨日</div>
                     </div>
-                    <div class="chart-container" id="customerChart">
-                        <div class="chart-bar" style="height: 60%" data-value="196">
-                            <div class="chart-label">周一</div>
-                        </div>
-                        <div class="chart-bar" style="height: 75%" data-value="245">
-                            <div class="chart-label">周二</div>
-                        </div>
-                        <div class="chart-bar" style="height: 85%" data-value="278">
-                            <div class="chart-label">周三</div>
-                        </div>
-                        <div class="chart-bar" style="height: 70%" data-value="229">
-                            <div class="chart-label">周四</div>
-                        </div>
-                        <div class="chart-bar" style="height: 90%" data-value="295">
-                            <div class="chart-label">周五</div>
-                        </div>
-                        <div class="chart-bar" style="height: 100%" data-value="328">
-                            <div class="chart-label">周六</div>
-                        </div>
-                        <div class="chart-bar" style="height: 65%" data-value="213">
-                            <div class="chart-label">周日</div>
-                        </div>
+                    <div class="stat-card">
+                        <div class="stat-label">今日流水</div>
+                        <div class="stat-value">¥12,680</div>
+                        <div class="stat-change up">↑ 8% 较昨日</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">授信额度</div>
+                        <div class="stat-value">¥500,000</div>
+                        <div class="stat-change">可用 ¥320,000</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">信用评分</div>
+                        <div class="stat-value">A级</div>
+                        <div class="stat-change up">↑ 提升中</div>
                     </div>
                 </div>
 
-                <!-- 实时预警 -->
-                <div class="chart-card">
-                    <div class="chart-title">
-                        <span>实时预警</span>
-                        <span style="color: #e74c3c; font-size: 12px;">● 在线</span>
+                <div class="content-card">
+                    <h3>本周客流趋势</h3>
+                    <div class="chart-placeholder">
+                        <div class="chart-bar" style="height: 60%"><span>周一 196</span></div>
+                        <div class="chart-bar" style="height: 75%"><span>周二 245</span></div>
+                        <div class="chart-bar" style="height: 85%"><span>周三 278</span></div>
+                        <div class="chart-bar" style="height: 70%"><span>周四 229</span></div>
+                        <div class="chart-bar" style="height: 90%"><span>周五 295</span></div>
+                        <div class="chart-bar" style="height: 100%"><span>周六 328</span></div>
+                        <div class="chart-bar" style="height: 65%"><span>周日 213</span></div>
                     </div>
-                    <div class="alerts-list">
+                </div>
+
+                <div class="content-card">
+                    <h3>实时预警</h3>
+                    <div class="alert-list">
                         <div class="alert-item warning">
                             <span class="alert-icon">⚠️</span>
                             <div class="alert-content">
                                 <div class="alert-title">流水波动提醒</div>
                                 <div class="alert-desc">今日流水较昨日下降15%</div>
                             </div>
-                            <div class="alert-time">10分钟前</div>
+                            <span class="alert-time">10分钟前</span>
                         </div>
                         <div class="alert-item info">
                             <span class="alert-icon">ℹ️</span>
@@ -128,78 +93,334 @@
                                 <div class="alert-title">融资申请通过</div>
                                 <div class="alert-desc">您的50万授信申请已获批</div>
                             </div>
-                            <div class="alert-time">2小时前</div>
-                        </div>
-                        <div class="alert-item danger">
-                            <span class="alert-icon">🔴</span>
-                            <div class="alert-content">
-                                <div class="alert-title">征信预警</div>
-                                <div class="alert-desc">您的信用评分即将调整</div>
-                            </div>
-                            <div class="alert-time">昨天</div>
+                            <span class="alert-time">2小时前</span>
                         </div>
                     </div>
                 </div>
-            </div>
+            </section>
 
-            <!-- 流水数据 -->
-            <div class="chart-card">
-                <div class="chart-title">
-                    <span>近期流水记录</span>
-                    <small style="color: rgba(255,255,255,0.5)">最近7天</small>
+            <!-- 流水管理 -->
+            <section id="transactions" class="page-section">
+                <h1 class="page-title">流水管理</h1>
+                <div class="content-card">
+                    <h3>近期流水记录</h3>
+                    <p style="color: #86868b; margin-bottom: 20px;">最近7天</p>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>时间</th>
+                                <th>类型</th>
+                                <th>金额</th>
+                                <th>对方账户</th>
+                                <th>状态</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>今天 14:30</td>
+                                <td>收入</td>
+                                <td style="color: #34c759;">+¥680</td>
+                                <td>美团外卖</td>
+                                <td><span class="status success">已入账</span></td>
+                            </tr>
+                            <tr>
+                                <td>今天 12:15</td>
+                                <td>收入</td>
+                                <td style="color: #34c759;">+¥1,280</td>
+                                <td>店内消费</td>
+                                <td><span class="status success">已入账</span></td>
+                            </tr>
+                            <tr>
+                                <td>今天 09:00</td>
+                                <td>支出</td>
+                                <td style="color: #ff3b30;">-¥2,500</td>
+                                <td>食材采购-供应商A</td>
+                                <td><span class="status pending">处理中</span></td>
+                            </tr>
+                            <tr>
+                                <td>昨天 18:20</td>
+                                <td>收入</td>
+                                <td style="color: #34c759;">+¥980</td>
+                                <td>饿了么外卖</td>
+                                <td><span class="status success">已入账</span></td>
+                            </tr>
+                            <tr>
+                                <td>昨天 11:30</td>
+                                <td>支出</td>
+                                <td style="color: #ff3b30;">-¥5,000</td>
+                                <td>房租-物业</td>
+                                <td><span class="status success">已入账</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
-                <table class="transaction-table">
-                    <thead>
-                        <tr>
-                            <th>时间</th>
-                            <th>类型</th>
-                            <th>金额</th>
-                            <th>对方账户</th>
-                            <th>状态</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>今天 14:30</td>
-                            <td>收入</td>
-                            <td class="amount-income">+¥680</td>
-                            <td>美团外卖</td>
-                            <td style="color: #2ecc71">已入账</td>
-                        </tr>
-                        <tr>
-                            <td>今天 12:15</td>
-                            <td>收入</td>
-                            <td class="amount-income">+¥1,280</td>
-                            <td>店内消费</td>
-                            <td style="color: #2ecc71">已入账</td>
-                        </tr>
-                        <tr>
-                            <td>今天 09:00</td>
-                            <td>支出</td>
-                            <td class="amount-expense">-¥2,500</td>
-                            <td>食材采购-供应商A</td>
-                            <td style="color: #f39c12">处理中</td>
-                        </tr>
-                        <tr>
-                            <td>昨天 18:20</td>
-                            <td>收入</td>
-                            <td class="amount-income">+¥980</td>
-                            <td>饿了么外卖</td>
-                            <td style="color: #2ecc71">已入账</td>
-                        </tr>
-                        <tr>
-                            <td>昨天 11:30</td>
-                            <td>支出</td>
-                            <td class="amount-expense">-¥5,000</td>
-                            <td>房租-物业</td>
-                            <td style="color: #2ecc71">已入账</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
+            </section>
+
+            <!-- 客流分析 -->
+            <section id="customers" class="page-section">
+                <h1 class="page-title">客流分析</h1>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-label">今日进店</div>
+                        <div class="stat-value">328</div>
+                        <div class="stat-change up">↑ 12%</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">平均停留</div>
+                        <div class="stat-value">45分钟</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">转化率</div>
+                        <div class="stat-value">68%</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">高峰时段</div>
+                        <div class="stat-value">12-14点</div>
+                    </div>
+                </div>
+                <div class="content-card">
+                    <h3>实时客流监控</h3>
+                    <div class="video-placeholder">
+                        <p style="color: #86868b;">📹 摄像头客流分析演示</p>
+                        <p style="color: #86868b; margin-top: 10px;">运行 cv/客流分析/demo.py 启动实时分析</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 融资授信 -->
+            <section id="credit" class="page-section">
+                <h1 class="page-title">融资授信</h1>
+                <div class="stats-grid">
+                    <div class="stat-card highlight">
+                        <div class="stat-label">授信额度</div>
+                        <div class="stat-value">¥500,000</div>
+                        <div class="stat-change">可用 ¥320,000</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">已用额度</div>
+                        <div class="stat-value">¥180,000</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">信用等级</div>
+                        <div class="stat-value" style="color: #FF6600;">A级</div>
+                    </div>
+                </div>
+                <div class="content-card">
+                    <h3>申请融资</h3>
+                    <form class="credit-form">
+                        <div class="form-group">
+                            <label>融资金额</label>
+                            <input type="number" placeholder="请输入申请金额">
+                        </div>
+                        <div class="form-group">
+                            <label>融资期限</label>
+                            <select>
+                                <option>3个月</option>
+                                <option>6个月</option>
+                                <option>12个月</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>用途说明</label>
+                            <textarea placeholder="请说明融资用途"></textarea>
+                        </div>
+                        <button type="submit" class="submit-btn">提交申请</button>
+                    </form>
+                </div>
+            </section>
+
+            <!-- 预警中心 -->
+            <section id="alerts" class="page-section">
+                <h1 class="page-title">预警中心</h1>
+                <div class="alert-list-full">
+                    <div class="alert-item warning">
+                        <span class="alert-icon">⚠️</span>
+                        <div class="alert-content">
+                            <div class="alert-title">流水波动提醒</div>
+                            <div class="alert-desc">今日流水较昨日下降15%，请关注</div>
+                        </div>
+                        <span class="alert-time">10分钟前</span>
+                    </div>
+                    <div class="alert-item info">
+                        <span class="alert-icon">ℹ️</span>
+                        <div class="alert-content">
+                            <div class="alert-title">融资申请通过</div>
+                            <div class="alert-desc">您的50万授信申请已获批</div>
+                        </div>
+                        <span class="alert-time">2小时前</span>
+                    </div>
+                    <div class="alert-item danger">
+                        <span class="alert-icon">🔴</span>
+                        <div class="alert-content">
+                            <div class="alert-title">征信预警</div>
+                            <div class="alert-desc">您的信用评分即将调整</div>
+                        </div>
+                        <span class="alert-time">昨天</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 资质认证 -->
+            <section id="certification" class="page-section">
+                <h1 class="page-title">资质认证</h1>
+                <div class="content-card">
+                    <h3>商户资质</h3>
+                    <div class="cert-list">
+                        <div class="cert-item">
+                            <span class="cert-icon">✅</span>
+                            <div class="cert-info">
+                                <div class="cert-title">营业执照</div>
+                                <div class="cert-status">已认证</div>
+                            </div>
+                        </div>
+                        <div class="cert-item">
+                            <span class="cert-icon">✅</span>
+                            <div class="cert-info">
+                                <div class="cert-title">食品经营许可证</div>
+                                <div class="cert-status">已认证</div>
+                            </div>
+                        </div>
+                        <div class="cert-item">
+                            <span class="cert-icon">⏳</span>
+                            <div class="cert-info">
+                                <div class="cert-title">税务登记证</div>
+                                <div class="cert-status">认证中</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 设置 -->
+            <section id="settings" class="page-section">
+                <h1 class="page-title">设置</h1>
+                <div class="content-card">
+                    <h3>账户设置</h3>
+                    <form class="settings-form">
+                        <div class="form-group">
+                            <label>店铺名称</label>
+                            <input type="text" value="张老板的小店">
+                        </div>
+                        <div class="form-group">
+                            <label>联系电话</label>
+                            <input type="tel" value="138****8888">
+                        </div>
+                        <div class="form-group">
+                            <label>通知设置</label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" checked> 接收流水变动通知
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" checked> 接收预警通知
+                            </label>
+                        </div>
+                        <button type="submit" class="submit-btn">保存设置</button>
+                    </form>
+                </div>
+            </section>
         </main>
     </div>
 
-    <script src="js/app.js"></script>
+    <style>
+        .page-section {
+            display: none;
+        }
+        .page-section.active {
+            display: block;
+        }
+        .chart-placeholder {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-around;
+            height: 200px;
+            padding: 20px;
+        }
+        .chart-bar {
+            width: 40px;
+            background: linear-gradient(180deg, #FF6600, #ff8533);
+            border-radius: 8px 8px 0 0;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            color: white;
+            font-size: 12px;
+            padding-bottom: 8px;
+        }
+        .alert-list, .alert-list-full {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        .alert-item {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 16px;
+            background: #f5f5f7;
+            border-radius: 12px;
+        }
+        .alert-item.warning { border-left: 4px solid #ff9500; }
+        .alert-item.info { border-left: 4px solid #007aff; }
+        .alert-item.danger { border-left: 4px solid #ff3b30; }
+        .alert-icon { font-size: 24px; }
+        .alert-content { flex: 1; }
+        .alert-title { font-weight: 600; color: #1d1d1f; }
+        .alert-desc { font-size: 14px; color: #86868b; }
+        .alert-time { font-size: 12px; color: #86868b; }
+        .status { padding: 4px 12px; border-radius: 20px; font-size: 12px; }
+        .status.success { background: #d4edda; color: #28a745; }
+        .status.pending { background: #fff3cd; color: #856404; }
+        .video-placeholder {
+            height: 300px;
+            background: #f5f5f7;
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .cert-list { display: flex; flex-direction: column; gap: 16px; }
+        .cert-item {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 16px;
+            background: #f5f5f7;
+            border-radius: 12px;
+        }
+        .cert-icon { font-size: 24px; }
+        .cert-title { font-weight: 600; }
+        .cert-status { font-size: 14px; color: #86868b; }
+        .checkbox-label { display: block; margin: 12px 0; }
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 14px 18px;
+            border: 2px solid #e5e5e5;
+            border-radius: 12px;
+            font-size: 16px;
+            margin-top: 8px;
+        }
+        .form-group textarea { min-height: 100px; }
+    </style>
+
+    <script>
+        // 侧边栏导航
+        document.querySelectorAll('.sidebar-menu a[data-page]').forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                
+                // 更新侧边栏状态
+                document.querySelectorAll('.sidebar-menu a').forEach(a => a.classList.remove('active'));
+                this.classList.add('active');
+                
+                // 显示对应页面
+                const pageId = this.getAttribute('data-page');
+                document.querySelectorAll('.page-section').forEach(section => {
+                    section.classList.remove('active');
+                });
+                document.getElementById(pageId).classList.add('active');
+            });
+        });
+    </script>
 </body>
 </html>
