@@ -634,6 +634,7 @@
     </style>
 
     <script>
+        // 页面导航
         document.querySelectorAll('.sidebar-menu a[data-page]').forEach(link => {
             link.addEventListener('click', function(e) {
                 e.preventDefault();
@@ -644,6 +645,113 @@
                 document.getElementById(pageId).classList.add('active');
             });
         });
+
+        // 添加流水
+        function addTransaction() {
+            const amount = prompt('请输入金额:', '');
+            const type = prompt('请输入类型 (收入/支出):', '收入');
+            const counterparty = prompt('请输入对方账户:', '');
+            if (amount && type && counterparty) {
+                alert('流水添加成功！\n金额: ¥' + amount + '\n类型: ' + type + '\n对方: ' + counterparty);
+                // 这里可以添加API调用
+            }
+        }
+
+        // 添加供应商
+        function addSupplier() {
+            const name = prompt('请输入供应商名称:', '');
+            const contact = prompt('请输入联系人:', '');
+            const phone = prompt('请输入联系电话:', '');
+            if (name && contact && phone) {
+                alert('供应商添加成功！\n名称: ' + name + '\n联系人: ' + contact + '\n电话: ' + phone);
+            }
+        }
+
+        // 申请支付渠道
+        function applyPaymentChannel(channel) {
+            if (confirm('确定要申请接入 ' + channel + ' 吗？')) {
+                alert('申请已提交，预计3-5个工作日内完成审核');
+            }
+        }
+
+        // 提交融资申请
+        function submitCreditApplication(event) {
+            event.preventDefault();
+            const amount = document.getElementById('creditAmount').value;
+            const term = document.getElementById('creditTerm').value;
+            const purpose = document.getElementById('creditPurpose').value;
+            
+            if (amount && term && purpose) {
+                alert('融资申请已提交！\n金额: ¥' + amount + '\n期限: ' + term + '\n用途: ' + purpose + '\n\n预计1-2个工作日内完成审核');
+                event.target.reset();
+            }
+        }
+
+        // 提前还款
+        function earlyRepayment(period) {
+            if (confirm('确定要提前还款第 ' + period + ' 期吗？')) {
+                alert('提前还款申请已提交，还款金额将在1个工作日内扣除');
+            }
+        }
+
+        // 导出报表
+        function exportReport(type) {
+            const formats = {
+                '流水报表': 'Excel',
+                '经营分析': 'PDF',
+                '融资记录': 'Excel'
+            };
+            alert('正在生成' + type + '（' + (formats[type] || 'Excel') + '格式）...\n导出成功！');
+        }
+
+        // 保存设置
+        function saveSettings(event) {
+            event.preventDefault();
+            alert('设置保存成功！');
+        }
+
+        // 实时时钟
+        function updateTime() {
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            const dateStr = now.toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' });
+            // 可以添加到页面显示
+        }
+        setInterval(updateTime, 1000);
+
+        // 模拟数据刷新
+        function refreshData() {
+            // 刷新数据概览
+            const statValues = document.querySelectorAll('.stat-value');
+            if (statValues.length > 0) {
+                // 随机更新一些数值模拟实时数据
+                console.log('数据已刷新:', new Date().toLocaleString());
+            }
+        }
+        setInterval(refreshData, 30000); // 每30秒刷新
+
+        // 导出按钮事件绑定
+        document.querySelectorAll('.supplier-card button').forEach((btn, index) => {
+            btn.addEventListener('click', function() {
+                const card = this.closest('.supplier-card');
+                const title = card.querySelector('h4').textContent;
+                exportReport(title);
+            });
+        });
+
+        // 还款按钮事件绑定
+        document.querySelectorAll('[onclick^="earlyRepayment"]').forEach(btn => {
+            const period = btn.closest('tr').querySelector('td:first-child').textContent;
+            btn.addEventListener('click', () => earlyRepayment(period.replace('第', '').replace('期', '')));
+        });
+
+        // 设置表单提交
+        document.querySelector('.settings-form')?.addEventListener('submit', saveSettings);
+
+        // 融资表单提交
+        document.querySelector('.credit-form')?.addEventListener('submit', submitCreditApplication);
+
+        console.log('餐饮供应链金融平台 - Dashboard 已加载');
     </script>
 </body>
 </html>
