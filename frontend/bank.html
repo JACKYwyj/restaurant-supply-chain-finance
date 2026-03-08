@@ -49,7 +49,7 @@
                 </div>
 
                 <div class="login-section fade-in-up" style="animation-delay: 0.5s">
-                    <a href="bank-dashboard.html" class="login-btn primary">登录银行账户</a>
+                    <button class="login-btn primary" onclick="showDemoMessage()">登录银行账户</button>
                     <a href="index.html" class="login-btn secondary">返回首页</a>
                 </div>
 
@@ -79,6 +79,11 @@
     </footer>
 
     <script>
+        // 显示演示提示
+        function showDemoMessage() {
+            alert('银行后台功能开发中，敬请期待！\n\n这是一个演示页面，展示银行入口的UI设计。');
+        }
+        
         // 页面加载完成后隐藏加载动画
         window.addEventListener('load', function() {
             setTimeout(function() {

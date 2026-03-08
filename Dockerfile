@@ -21,17 +21,23 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY backend/ .
 
 # ============================================
-# 阶段2: 前端Nginx构建
+# 阶段2: 前端构建
 # ============================================
 FROM node:20-alpine AS frontend-builder
 
 WORKDIR /app
 
 # 复制前端文件
-COPY frontend/ ./frontend/
+COPY frontend/package*.json ./
 
-# 安装nginx用于静态文件服务
-# 前端为纯静态文件，直接复制
+# 安装依赖（如果有的话）
+RUN npm install || echo "No npm dependencies"
+
+# 复制完整前端代码
+COPY frontend/ .
+
+# 如果需要构建，运行 build 命令
+# RUN npm run build || echo "No build script"
 
 # ============================================
 # 阶段3: 生产镜像
@@ -56,11 +62,15 @@ COPY --from=backend-builder /usr/local/bin /usr/local/bin
 COPY --from=backend-builder /app/backend /app/backend
 
 # 复制前端静态文件
-COPY --from=frontend-builder /app/frontend /app/frontend
+COPY --from=frontend-builder /app /app/frontend
 
 # 复制Nginx配置
 COPY nginx.conf /etc/nginx/nginx.conf
 COPY frontend/default.conf /etc/nginx/conf.d/default.conf
+
+# 复制docker-compose配置
+COPY docker-compose.yml /app/docker-compose.yml
+COPY deploy.sh /app/deploy.sh
 
 # 创建非root用户
 RUN useradd -m -u 1000 appuser && \
