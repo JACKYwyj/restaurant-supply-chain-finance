@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>商户Dashboard - 餐饮供应链金融赋能平台</title>
+    <title>商户Dashboard - FoodVerify</title>
     <link rel="stylesheet" href="css/style.css">
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
 </head>
@@ -16,9 +16,23 @@
         </div>
         <div class="user-info">
             <div class="user-avatar">张</div>
-            <span class="user-name">张老板的小店</div>
+            <span class="user-name">张老板的小店</span>
         </div>
     </header>
+
+    <!-- 侧边栏遮罩 -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <!-- Toast 容器 -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- 加载状态 -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-spinner">
+            <div class="spinner"></div>
+            <div class="loading-text">加载中...</div>
+        </div>
+    </div>
 
     <div class="dashboard-container">
         <!-- 侧边栏 -->
@@ -634,6 +648,193 @@
     </style>
 
     <script>
+        // ========================================
+        // 移动端菜单交互
+        // ========================================
+        const menuToggle = document.getElementById('menuToggle');
+        const sidebar = document.querySelector('.sidebar');
+        const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+        if (menuToggle && sidebar) {
+            menuToggle.addEventListener('click', () => {
+                sidebar.classList.toggle('active');
+                if (sidebarOverlay) sidebarOverlay.classList.toggle('active');
+            });
+
+            if (sidebarOverlay) {
+                sidebarOverlay.addEventListener('click', () => {
+                    sidebar.classList.remove('active');
+                    sidebarOverlay.classList.remove('active');
+                });
+            }
+        }
+
+        // ========================================
+        // 侧边栏折叠功能 (桌面端)
+        // ========================================
+        const sidebarCollapseBtn = document.createElement('li');
+        sidebarCollapseBtn.innerHTML = '<a href="javascript:;" id="sidebarCollapseToggle"><span class="icon">◀</span><span class="collapse-text">收起侧边栏</span></a>';
+        const sidebarMenu = document.querySelector('.sidebar-menu');
+        if (sidebarMenu) {
+            sidebarMenu.appendChild(sidebarCollapseBtn);
+        }
+
+        const sidebarCollapseToggle = document.getElementById('sidebarCollapseToggle');
+        if (sidebarCollapseToggle) {
+            sidebarCollapseToggle.addEventListener('click', () => {
+                sidebar.classList.toggle('collapsed');
+                const collapseText = sidebarCollapseToggle.querySelector('.collapse-text');
+                const collapseIcon = sidebarCollapseToggle.querySelector('.icon');
+                
+                if (sidebar.classList.contains('collapsed')) {
+                    if (collapseText) collapseText.textContent = '展开侧边栏';
+                    if (collapseIcon) collapseIcon.textContent = '▶';
+                    document.querySelectorAll('.sidebar-menu a span:not(.icon)').forEach(span => {
+                        span.style.display = 'none';
+                    });
+                    document.querySelectorAll('.sidebar-menu a').forEach(a => {
+                        a.style.justifyContent = 'center';
+                        a.style.padding = '14px';
+                    });
+                } else {
+                    if (collapseText) collapseText.textContent = '收起侧边栏';
+                    if (collapseIcon) collapseIcon.textContent = '◀';
+                    document.querySelectorAll('.sidebar-menu a span:not(.icon)').forEach(span => {
+                        span.style.display = '';
+                    });
+                    document.querySelectorAll('.sidebar-menu a').forEach(a => {
+                        a.style.justifyContent = '';
+                        a.style.padding = '';
+                    });
+                }
+            });
+        }
+
+        // ========================================
+        // 面包屑导航
+        // ========================================
+        // 在页面顶部添加面包屑
+        const mainContent = document.querySelector('.main-content');
+        if (mainContent) {
+            const breadcrumb = document.createElement('div');
+            breadcrumb.className = 'breadcrumb';
+            breadcrumb.innerHTML = `
+                <span class="breadcrumb-item">首页</span>
+                <span class="breadcrumb-separator">›</span>
+                <span class="breadcrumb-item active" id="breadcrumbCurrent">数据概览</span>
+            `;
+            mainContent.insertBefore(breadcrumb, mainContent.firstChild);
+        }
+
+        // 页面导航时更新面包屑
+        function updateBreadcrumb(pageName) {
+            const breadcrumbCurrent = document.getElementById('breadcrumbCurrent');
+            if (breadcrumbCurrent) {
+                breadcrumbCurrent.textContent = pageName;
+            }
+            // 移动端自动关闭侧边栏
+            if (window.innerWidth <= 1024 && sidebar) {
+                sidebar.classList.remove('active');
+                if (sidebarOverlay) sidebarOverlay.classList.remove('active');
+            }
+        }
+
+        // 页面标题映射
+        const pageNames = {
+            'overview': '数据概览',
+            'transactions': '流水管理',
+            'customers': '客流分析',
+            'suppliers': '供应商管理',
+            'payments': '支付渠道',
+            'credit': '融资授信',
+            'repayment': '还款管理',
+            'rtv': 'RTV评分',
+            'alerts': '预警中心',
+            'certification': '资质认证',
+            'export': '数据导出',
+            'settings': '设置'
+        };
+
+        // ========================================
+        // Toast 提示组件
+        // ========================================
+        const toastContainer = document.getElementById('toastContainer');
+
+        function showToast(type, title, message, duration = 4000) {
+            if (!toastContainer) return;
+
+            const icons = {
+                success: '✅',
+                error: '❌',
+                warning: '⚠️',
+                info: 'ℹ️'
+            };
+
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.innerHTML = `
+                <span class="toast-icon">${icons[type] || 'ℹ️'}</span>
+                <div class="toast-content">
+                    <div class="toast-title">${title}</div>
+                    <div class="toast-message">${message}</div>
+                </div>
+                <button class="toast-close" onclick="this.parentElement.remove()">×</button>
+            `;
+
+            toastContainer.appendChild(toast);
+
+            // 动画入场
+            requestAnimationFrame(() => {
+                toast.classList.add('show');
+            });
+
+            // 自动移除
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 300);
+            }, duration);
+        }
+
+        // 便捷方法
+        const toast = {
+            success: (title, msg) => showToast('success', title, msg),
+            error: (title, msg) => showToast('error', title, msg),
+            warning: (title, msg) => showToast('warning', title, msg),
+            info: (title, msg) => showToast('info', title, msg)
+        };
+
+        // ========================================
+        // 加载状态管理
+        // ========================================
+        const loadingOverlay = document.getElementById('loadingOverlay');
+
+        function showLoading(text = '加载中...') {
+            if (!loadingOverlay) return;
+            const loadingText = loadingOverlay.querySelector('.loading-text');
+            if (loadingText) loadingText.textContent = text;
+            loadingOverlay.classList.add('active');
+        }
+
+        function hideLoading() {
+            if (!loadingOverlay) return;
+            loadingOverlay.classList.remove('active');
+        }
+
+        // 按钮加载状态
+        function setButtonLoading(btn, loading = true) {
+            if (!btn) return;
+            if (loading) {
+                btn.classList.add('btn-loading');
+                btn.dataset.originalText = btn.textContent;
+                btn.textContent = '处理中...';
+                btn.disabled = true;
+            } else {
+                btn.classList.remove('btn-loading');
+                btn.textContent = btn.dataset.originalText || btn.textContent;
+                btn.disabled = false;
+            }
+        }
+
         // 页面导航
         document.querySelectorAll('.sidebar-menu a[data-page]').forEach(link => {
             link.addEventListener('click', function(e) {
@@ -643,6 +844,16 @@
                 const pageId = this.getAttribute('data-page');
                 document.querySelectorAll('.page-section').forEach(section => section.classList.remove('active'));
                 document.getElementById(pageId).classList.add('active');
+                
+                // 更新面包屑
+                const pageName = pageNames[pageId] || pageId;
+                updateBreadcrumb(pageName);
+                
+                // 更新页面标题
+                const pageTitle = document.querySelector('.page-title');
+                if (pageTitle) {
+                    pageTitle.textContent = pageName;
+                }
             });
         });
 
@@ -652,8 +863,7 @@
             const type = prompt('请输入类型 (收入/支出):', '收入');
             const counterparty = prompt('请输入对方账户:', '');
             if (amount && type && counterparty) {
-                alert('流水添加成功！\n金额: ¥' + amount + '\n类型: ' + type + '\n对方: ' + counterparty);
-                // 这里可以添加API调用
+                toast.success('添加成功', `金额: ¥${amount}，类型: ${type}`);
             }
         }
 
@@ -663,52 +873,171 @@
             const contact = prompt('请输入联系人:', '');
             const phone = prompt('请输入联系电话:', '');
             if (name && contact && phone) {
-                alert('供应商添加成功！\n名称: ' + name + '\n联系人: ' + contact + '\n电话: ' + phone);
+                toast.success('添加成功', `供应商: ${name} 已添加`);
             }
         }
 
         // 申请支付渠道
         function applyPaymentChannel(channel) {
             if (confirm('确定要申请接入 ' + channel + ' 吗？')) {
-                alert('申请已提交，预计3-5个工作日内完成审核');
+                showLoading('提交申请中...');
+                setTimeout(() => {
+                    hideLoading();
+                    toast.success('申请已提交', `${channel} 申请预计3-5个工作日内审核`);
+                }, 1000);
             }
         }
 
         // 提交融资申请
         function submitCreditApplication(event) {
             event.preventDefault();
+            
+            // 表单验证
+            if (!validateForm(event.target)) {
+                toast.error('验证失败', '请填写所有必填项');
+                return;
+            }
+            
             const amount = document.getElementById('creditAmount').value;
             const term = document.getElementById('creditTerm').value;
             const purpose = document.getElementById('creditPurpose').value;
             
-            if (amount && term && purpose) {
-                alert('融资申请已提交！\n金额: ¥' + amount + '\n期限: ' + term + '\n用途: ' + purpose + '\n\n预计1-2个工作日内完成审核');
+            const btn = event.target.querySelector('.submit-btn');
+            setButtonLoading(btn, true);
+            
+            setTimeout(() => {
+                setButtonLoading(btn, false);
+                toast.success('申请已提交', `金额: ¥${amount}，期限: ${term}`);
                 event.target.reset();
-            }
+            }, 1500);
         }
 
         // 提前还款
         function earlyRepayment(period) {
             if (confirm('确定要提前还款第 ' + period + ' 期吗？')) {
-                alert('提前还款申请已提交，还款金额将在1个工作日内扣除');
+                showLoading('提交还款申请...');
+                setTimeout(() => {
+                    hideLoading();
+                    toast.success('申请已提交', `第 ${period} 期提前还款申请已提交`);
+                }, 1000);
             }
         }
 
         // 导出报表
         function exportReport(type) {
-            const formats = {
-                '流水报表': 'Excel',
-                '经营分析': 'PDF',
-                '融资记录': 'Excel'
-            };
-            alert('正在生成' + type + '（' + (formats[type] || 'Excel') + '格式）...\n导出成功！');
+            const btn = event.target;
+            setButtonLoading(btn, true);
+            
+            setTimeout(() => {
+                setButtonLoading(btn, false);
+                toast.success('导出成功', `${type} 已生成`);
+            }, 1500);
         }
 
         // 保存设置
         function saveSettings(event) {
             event.preventDefault();
-            alert('设置保存成功！');
+            const btn = event.target.querySelector('.submit-btn');
+            setButtonLoading(btn, true);
+            
+            setTimeout(() => {
+                setButtonLoading(btn, false);
+                toast.success('保存成功', '设置已更新');
+            }, 1000);
         }
+
+        // ========================================
+        // 表单验证增强
+        // ========================================
+        function validateForm(form) {
+            let isValid = true;
+            const inputs = form.querySelectorAll('input[required], select[required], textarea[required]');
+            
+            inputs.forEach(input => {
+                if (!input.value.trim()) {
+                    input.classList.add('error');
+                    isValid = false;
+                    
+                    // 显示错误提示
+                    const errorMsg = document.createElement('div');
+                    errorMsg.className = 'form-error';
+                    errorMsg.style.cssText = 'color: #ff3b30; font-size: 12px; margin-top: 4px;';
+                    errorMsg.textContent = '此字段为必填项';
+                    
+                    // 移除已存在的错误提示
+                    const existingError = input.parentElement.querySelector('.form-error');
+                    if (existingError) existingError.remove();
+                    
+                    input.parentElement.appendChild(errorMsg);
+                } else {
+                    input.classList.remove('error');
+                    const existingError = input.parentElement.querySelector('.form-error');
+                    if (existingError) existingError.remove();
+                }
+                
+                // 失焦时验证
+                input.addEventListener('blur', function() {
+                    if (!this.value.trim()) {
+                        this.classList.add('error');
+                    } else {
+                        this.classList.remove('error');
+                        const existingError = this.parentElement.querySelector('.form-error');
+                        if (existingError) existingError.remove();
+                    }
+                });
+                
+                // 输入时移除错误状态
+                input.addEventListener('input', function() {
+                    this.classList.remove('error');
+                    const existingError = this.parentElement.querySelector('.form-error');
+                    if (existingError) existingError.remove();
+                });
+            });
+            
+            return isValid;
+        }
+
+        // ========================================
+        // 键盘导航支持
+        // ========================================
+        document.addEventListener('keydown', function(e) {
+            // ESC 关闭移动端菜单
+            if (e.key === 'Escape') {
+                if (sidebar && sidebar.classList.contains('active')) {
+                    sidebar.classList.remove('active');
+                    if (sidebarOverlay) sidebarOverlay.classList.remove('active');
+                }
+            }
+            
+            // Ctrl/Cmd + K 打开搜索（预留）
+            if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+                e.preventDefault();
+                toast.info('快捷键', '搜索功能开发中...');
+            }
+        });
+
+        // Tab 键导航高亮
+        document.querySelectorAll('button, a, input, select, textarea').forEach(el => {
+            el.addEventListener('focus', function() {
+                this.classList.add('keyboard-focused');
+            });
+            el.addEventListener('blur', function() {
+                this.classList.remove('keyboard-focused');
+            });
+        });
+
+        // Enter 键提交表单
+        document.querySelectorAll('form').forEach(form => {
+            form.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    // 如果不是文本域则提交
+                    if (e.target.tagName !== 'TEXTAREA') {
+                        e.preventDefault();
+                        form.dispatchEvent(new Event('submit', { bubbles: true }));
+                    }
+                }
+            });
+        });
 
         // 实时时钟
         function updateTime() {
@@ -751,7 +1080,128 @@
         // 融资表单提交
         document.querySelector('.credit-form')?.addEventListener('submit', submitCreditApplication);
 
+        // ========================================
+        // 空状态处理
+        // ========================================
+        function checkEmptyState(tableBody, emptyMessage = '暂无数据') {
+            if (!tableBody || tableBody.rows.length === 0) {
+                const emptyState = document.createElement('tr');
+                emptyState.innerHTML = `
+                    <td colspan="10" style="text-align: center; padding: 60px 20px;">
+                        <div class="empty-state">
+                            <div class="empty-state-icon">📭</div>
+                            <div class="empty-state-title">${emptyMessage}</div>
+                            <div class="empty-state-desc">暂无记录，请添加数据</div>
+                        </div>
+                    </td>
+                `;
+                tableBody.appendChild(emptyState);
+                return true;
+            }
+            return false;
+        }
+
+        // 示例：在页面加载后检查空状态
+        // checkEmptyState(document.querySelector('#transactions tbody'), '暂无流水记录');
+
+        // 空状态提示函数（可在控制台调用测试）
+        window.showEmptyState = function(containerSelector, options = {}) {
+            const container = document.querySelector(containerSelector);
+            if (!container) return;
+            
+            const {
+                icon = '📭',
+                title = '暂无数据',
+                desc = '暂无记录，请添加数据',
+                actionText = '添加数据',
+                actionClick = null
+            } = options;
+            
+            container.innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-state-icon">${icon}</div>
+                    <div class="empty-state-title">${title}</div>
+                    <div class="empty-state-desc">${desc}</div>
+                    ${actionClick ? `<button class="empty-state-action" onclick="${actionClick}">${actionText}</button>` : ''}
+                </div>
+            `;
+        };
+
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            // 滚动显示返回顶部按钮
+            const backToTopBtn = document.createElement('button');
+            backToTopBtn.id = 'backToTop';
+            backToTopBtn.innerHTML = '↑';
+            backToTopBtn.title = '返回顶部';
+            backToTopBtn.style.cssText = `
+                position: fixed;
+                bottom: 30px;
+                right: 30px;
+                width: 50px;
+                height: 50px;
+                border-radius: 50%;
+                background: linear-gradient(135deg, #FF6600, #ff8533);
+                color: white;
+                border: none;
+                font-size: 24px;
+                cursor: pointer;
+                box-shadow: 0 4px 16px rgba(255, 102, 0, 0.3);
+                opacity: 0;
+                visibility: hidden;
+                transition: all 0.3s ease;
+                z-index: 1000;
+            `;
+            document.body.appendChild(backToTopBtn);
+
+            window.addEventListener('scroll', function() {
+                if (window.scrollY > 300) {
+                    backToTopBtn.style.opacity = '1';
+                    backToTopBtn.style.visibility = 'visible';
+                } else {
+                    backToTopBtn.style.opacity = '0';
+                    backToTopBtn.style.visibility = 'hidden';
+                }
+            });
+
+            backToTopBtn.addEventListener('click', function() {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            });
+        });
+
         console.log('餐饮供应链金融平台 - Dashboard 已加载');
+    </script>
+
+    <!-- 返回顶部按钮 -->
+    <button id="backToTop" onclick="window.scrollTo({top: 0, behavior: 'smooth'})" style="
+        position: fixed;
+        bottom: 30px;
+        right: 30px;
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #FF6600, #ff8533);
+        color: white;
+        border: none;
+        font-size: 24px;
+        cursor: pointer;
+        box-shadow: 0 4px 16px rgba(255, 102, 0, 0.3);
+        display: none;
+        z-index: 1000;
+    " title="返回顶部">↑</button>
+
+    <script>
+        // 滚动显示返回顶部按钮
+        window.addEventListener('scroll', function() {
+            const btn = document.getElementById('backToTop');
+            if (btn) {
+                if (window.scrollY > 300) {
+                    btn.style.display = 'block';
+                } else {
+                    btn.style.display = 'none';
+                }
+            }
+        });
     </script>
 </body>
 </html>

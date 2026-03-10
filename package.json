@@ -1,7 +1,7 @@
 {
   "name": "restaurant-supply-chain-finance",
-  "version": "1.0.0",
-  "description": "餐饮供应链金融赋能平台",
+  "version": "1.1.0",
+  "description": "餐饮供应链金融赋能平台 - UX优化版",
   "author": "Jacky Wang",
   "main": "electron/main.js",
   "scripts": {
