@@ -3,7 +3,7 @@
 基于多维数据验证的餐饮供应链金融赋能平台 - 商用级风控与信贷评估系统。
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-1.1.0-green.svg)](package.json)
+[![Version](https://img.shields.io/badge/version-1.2.0-green.svg)](package.json)
 [![GitHub Pages](https://img.shields.io/badge/在线演示-GitHub%20Pages-brightgreen.svg)](https://jackywyj.github.io/restaurant-supply-chain-finance/)
 
 ## 👀 在线演示
@@ -21,6 +21,7 @@
 ## ✨ 功能特性
 
 - 📊 **数据概览** - 实时客流、流水、授信额度监控
+- 📹 **实时摄像头客流监测** - AI 视频实时客流统计与分析
 - 💰 **流水管理** - 数字化资金往来记录
 - 👥 **客流分析** - AI视频客流统计与分析
 - 🚚 **供应商管理** - 供应链上下游协同
@@ -33,10 +34,10 @@
 ## 📥 下载安装
 
 ### Windows 版本
-- [餐饮供应链金融平台 Setup 1.1.0.exe](https://github.com/JACKYwyj/restaurant-supply-chain-finance/releases/latest)
+- [餐饮供应链金融平台 Setup 1.2.0.exe](https://github.com/JACKYwyj/restaurant-supply-chain-finance/releases/tag/v1.2.0)
 
 ### macOS 版本
-- [餐饮供应链金融平台-1.1.0-arm64.dmg](https://github.com/JACKYwyj/restaurant-supply-chain-finance/releases/latest)
+- [餐饮供应链金融平台-1.2.0-arm64.dmg](https://github.com/JACKYwyj/restaurant-supply-chain-finance/releases/tag/v1.2.0)
 
 ### 浏览器访问
 直接打开 `frontend/index.html` 即可体验
@@ -82,15 +83,20 @@ npm run build:mac
 ├── backend/           # Flask 后端
 │   ├── api/          # API 接口
 │   ├── services/     # 业务服务
-│   └── models.py     # 数据模型
+│   ├── models.py     # 数据模型
+│   ├── utils/        # 工具函数
+│   └── monitoring/   # 监控模块
 ├── frontend/         # Web 前端
 │   ├── index.html    # 登录页
 │   ├── dashboard.html # 商户后台
 │   ├── bank.html     # 银行/投资者端
-│   └── css/          # 样式文件
+│   ├── css/          # 样式文件
+│   └── js/           # JavaScript 文件
 ├── cv/               # 客流分析 CV 模块
+│   └── 客流分析/     # 客流分析算法
 ├── electron/         # Electron 桌面应用
-└── dist/            # 构建产物
+├── dist/             # 构建产物
+└── screenshots/      # 项目截图
 ```
 
 ---
@@ -103,9 +109,9 @@ npm run build:mac
 | 前端 | HTML5 + CSS3 + JavaScript |
 | CV | OpenCV + YOLO |
 | 桌面 | Electron |
-| 数据库 | SQLite (开发) / MySQL (生产) |
+| 数据库 | SQLite (开发 (生产) |
 
----
+) / MySQL---
 
 ## 📄 许可证
 
