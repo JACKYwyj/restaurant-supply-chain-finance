@@ -27,7 +27,7 @@ logs/
 # Virtual environment
 venv/
 env/
-*.venv
+*.venv/
 
 # Pytest
 .pytest_cache/
@@ -35,3 +35,16 @@ __pycache__/
 
 # TypeScript
 *.tsbuildinfo
+
+# CV/TensorFlow
+cv/models/
+cv/__pycache__/
+*.pyc
+
+# 环境变量
+.env
+.env.local
+.env.*.local
+
+# 测试报告
+TEST_REPORT.md
