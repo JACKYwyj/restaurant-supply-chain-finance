@@ -1,0 +1,1207 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>银行后台 - FoodVerify</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+</head>
+<body class="dashboard-body">
+    <!-- 顶部导航 -->
+    <header class="dashboard-header">
+        <div class="logo">
+            <span class="logo-icon">🏦</span>
+            <span class="logo-text">餐链金融 - 银行后台</span>
+        </div>
+        <div class="user-info">
+            <div class="user-avatar">银</div>
+            <span class="user-name">招商银行</span>
+        </div>
+    </header>
+
+    <!-- 侧边栏遮罩 -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <!-- Toast 容器 -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- 加载状态 -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-spinner">
+            <div class="spinner"></div>
+            <div class="loading-text">加载中...</div>
+        </div>
+    </div>
+
+    <div class="dashboard-container">
+        <!-- 侧边栏 -->
+        <aside class="sidebar">
+            <ul class="sidebar-menu">
+                <li><a href="#overview" class="active" data-page="overview"><span class="icon">📊</span>数据概览</a></li>
+                <li><a href="#transactions" data-page="transactions"><span class="icon">💰</span>流水管理</a></li>
+                <li><a href="#customers" data-page="customers"><span class="icon">👥</span>客流分析</a></li>
+                <li><a href="#suppliers" data-page="suppliers"><span class="icon">🚚</span>供应商管理</a></li>
+                <li><a href="#payments" data-page="payments"><span class="icon">💳</span>支付渠道</a></li>
+                <li><a href="#credit" data-page="credit"><span class="icon">🏦</span>融资授信</a></li>
+                <li><a href="#repayment" data-page="repayment"><span class="icon">💵</span>还款管理</a></li>
+                <li><a href="#rtv" data-page="rtv"><span class="icon">📈</span>RTV评分</a></li>
+                <li><a href="#alerts" data-page="alerts"><span class="icon">⚠️</span>预警中心</a></li>
+                <li><a href="#certification" data-page="certification"><span class="icon">📝</span>资质认证</a></li>
+                <li><a href="#export" data-page="export"><span class="icon">📥</span>数据导出</a></li>
+                <li><a href="#settings" data-page="settings"><span class="icon">⚙️</span>设置</a></li>
+                <li><a href="index.html"><span class="icon">🚪</span>退出登录</a></li>
+            </ul>
+        </aside>
+
+        <!-- 主内容 -->
+        <main class="main-content">
+            <!-- 数据概览 -->
+            <section id="overview" class="page-section active">
+                <h1 class="page-title">数据概览</h1>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-label">今日客流</div>
+                        <div class="stat-value">328</div>
+                        <div class="stat-change up">↑ 12% 较昨日</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">今日流水</div>
+                        <div class="stat-value">¥12,680</div>
+                        <div class="stat-change up">↑ 8% 较昨日</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">授信额度</div>
+                        <div class="stat-value">¥500,000</div>
+                        <div class="stat-change">可用 ¥320,000</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">信用评分</div>
+                        <div class="stat-value">A级</div>
+                        <div class="stat-change up">↑ 提升中</div>
+                    </div>
+                </div>
+
+                <div class="content-card">
+                    <h3>本周客流趋势</h3>
+                    <div class="chart-placeholder">
+                        <div class="chart-bar" style="height: 60%"><span>周一 196</span></div>
+                        <div class="chart-bar" style="height: 75%"><span>周二 245</span></div>
+                        <div class="chart-bar" style="height: 85%"><span>周三 278</span></div>
+                        <div class="chart-bar" style="height: 70%"><span>周四 229</span></div>
+                        <div class="chart-bar" style="height: 90%"><span>周五 295</span></div>
+                        <div class="chart-bar" style="height: 100%"><span>周六 328</span></div>
+                        <div class="chart-bar" style="height: 65%"><span>周日 213</span></div>
+                    </div>
+                </div>
+
+                <div class="content-card">
+                    <h3>实时预警</h3>
+                    <div class="alert-list">
+                        <div class="alert-item warning">
+                            <span class="alert-icon">⚠️</span>
+                            <div class="alert-content">
+                                <div class="alert-title">流水波动提醒</div>
+                                <div class="alert-desc">今日流水较昨日下降15%</div>
+                            </div>
+                            <span class="alert-time">10分钟前</span>
+                        </div>
+                        <div class="alert-item info">
+                            <span class="alert-icon">ℹ️</span>
+                            <div class="alert-content">
+                                <div class="alert-title">融资申请通过</div>
+                                <div class="alert-desc">您的50万授信申请已获批</div>
+                            </div>
+                            <span class="alert-time">2小时前</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 流水管理 -->
+            <section id="transactions" class="page-section">
+                <h1 class="page-title">流水管理</h1>
+                <div class="content-card">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <h3 style="margin: 0;">近期流水记录</h3>
+                        <button class="submit-btn" style="padding: 10px 20px;" onclick="addTransaction()">+ 添加流水</button>
+                    </div>
+                    <p style="color: #86868b; margin-bottom: 20px;">最近7天</p>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>时间</th>
+                                <th>类型</th>
+                                <th>金额</th>
+                                <th>对方账户</th>
+                                <th>状态</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>今天 14:30</td>
+                                <td>收入</td>
+                                <td style="color: #34c759;">+¥680</td>
+                                <td>美团外卖</td>
+                                <td><span class="status success">已入账</span></td>
+                            </tr>
+                            <tr>
+                                <td>今天 12:15</td>
+                                <td>收入</td>
+                                <td style="color: #34c759;">+¥1,280</td>
+                                <td>店内消费</td>
+                                <td><span class="status success">已入账</span></td>
+                            </tr>
+                            <tr>
+                                <td>今天 09:00</td>
+                                <td>支出</td>
+                                <td style="color: #ff3b30;">-¥2,500</td>
+                                <td>食材采购-供应商A</td>
+                                <td><span class="status pending">处理中</span></td>
+                            </tr>
+                            <tr>
+                                <td>昨天 18:20</td>
+                                <td>收入</td>
+                                <td style="color: #34c759;">+¥980</td>
+                                <td>饿了么外卖</td>
+                                <td><span class="status success">已入账</span></td>
+                            </tr>
+                            <tr>
+                                <td>昨天 11:30</td>
+                                <td>支出</td>
+                                <td style="color: #ff3b30;">-¥5,000</td>
+                                <td>房租-物业</td>
+                                <td><span class="status success">已入账</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- 客流分析 -->
+            <section id="customers" class="page-section">
+                <h1 class="page-title">客流分析</h1>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-label">今日进店</div>
+                        <div class="stat-value">328</div>
+                        <div class="stat-change up">↑ 12%</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">平均停留</div>
+                        <div class="stat-value">45分钟</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">转化率</div>
+                        <div class="stat-value">68%</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">高峰时段</div>
+                        <div class="stat-value">12-14点</div>
+                    </div>
+                </div>
+                <div class="content-card">
+                    <h3>实时客流监控</h3>
+                    <div class="video-placeholder">
+                        <p>📹 摄像头客流分析演示</p>
+                        <p style="margin-top: 10px; color: #86868b;">运行 cv/客流分析/demo.py 启动实时分析</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 供应商管理 -->
+            <section id="suppliers" class="page-section">
+                <h1 class="page-title">供应商管理</h1>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-label">合作供应商</div>
+                        <div class="stat-value">12</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">本月采购</div>
+                        <div class="stat-value">¥85,000</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">待付款</div>
+                        <div class="stat-value">¥12,500</div>
+                    </div>
+                </div>
+                <div class="content-card">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <h3 style="margin: 0;">供应商列表</h3>
+                        <button class="submit-btn" style="padding: 10px 20px;" onclick="addSupplier()">+ 添加供应商</button>
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>供应商名称</th>
+                                <th>联系人</th>
+                                <th>联系电话</th>
+                                <th>本月采购</th>
+                                <th>状态</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>食材配送-供应商A</td>
+                                <td>李先生</td>
+                                <td>138****1234</td>
+                                <td>¥35,000</td>
+                                <td><span class="status success">正常</span></td>
+                            </tr>
+                            <tr>
+                                <td>海鲜批发-供应商B</td>
+                                <td>王女士</td>
+                                <td>139****5678</td>
+                                <td>¥28,000</td>
+                                <td><span class="status success">正常</span></td>
+                            </tr>
+                            <tr>
+                                <td>饮料供应商-供应商C</td>
+                                <td>张经理</td>
+                                <td>137****9012</td>
+                                <td>¥12,000</td>
+                                <td><span class="status pending">待付款</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- 支付渠道 -->
+            <section id="payments" class="page-section">
+                <h1 class="page-title">支付渠道</h1>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-label">今日收入</div>
+                        <div class="stat-value">¥12,680</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">支付宝</div>
+                        <div class="stat-value">¥5,200</div>
+                        <div class="stat-change">占比 41%</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">微信支付</div>
+                        <div class="stat-value">¥4,800</div>
+                        <div class="stat-change">占比 38%</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">现金/其他</div>
+                        <div class="stat-value">¥2,680</div>
+                        <div class="stat-change">占比 21%</div>
+                    </div>
+                </div>
+                <div class="content-card">
+                    <h3>支付渠道接入</h3>
+                    <div class="supplier-grid">
+                        <div class="supplier-card">
+                            <div style="font-size: 40px;">💙</div>
+                            <h4>支付宝</h4>
+                            <p>已接入</p>
+                            <span class="status success">在线</span>
+                        </div>
+                        <div class="supplier-card">
+                            <div style="font-size: 40px;">💚</div>
+                            <h4>微信支付</h4>
+                            <p>已接入</p>
+                            <span class="status success">在线</span>
+                        </div>
+                        <div class="supplier-card">
+                            <div style="font-size: 40px;">💳</div>
+                            <h4>银联</h4>
+                            <p>未接入</p>
+                            <button class="submit-btn" style="padding: 8px 16px; font-size: 14px;" onclick="applyPaymentChannel('银联')">申请接入</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 融资授信 -->
+            <section id="credit" class="page-section">
+                <h1 class="page-title">融资授信</h1>
+                <div class="stats-grid">
+                    <div class="stat-card highlight">
+                        <div class="stat-label">授信额度</div>
+                        <div class="stat-value">¥500,000</div>
+                        <div class="stat-change">可用 ¥320,000</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">已用额度</div>
+                        <div class="stat-value">¥180,000</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">信用等级</div>
+                        <div class="stat-value" style="color: #FF6600;">A级</div>
+                    </div>
+                </div>
+                <div class="content-card">
+                    <h3>申请融资</h3>
+                    <form class="credit-form" onsubmit="submitCreditApplication(event)">
+                        <div class="form-group">
+                            <label>融资金额</label>
+                            <input type="number" id="creditAmount" placeholder="请输入申请金额" required>
+                        </div>
+                        <div class="form-group">
+                            <label>融资期限</label>
+                            <select id="creditTerm" required>
+                                <option value="">请选择期限</option>
+                                <option>3个月</option>
+                                <option>6个月</option>
+                                <option>12个月</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>用途说明</label>
+                            <textarea id="creditPurpose" placeholder="请说明融资用途" required></textarea>
+                        </div>
+                        <button type="submit" class="submit-btn">提交申请</button>
+                    </form>
+                </div>
+            </section>
+
+            <!-- 还款管理 -->
+            <section id="repayment" class="page-section">
+                <h1 class="page-title">还款管理</h1>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-label">待还本金</div>
+                        <div class="stat-value">¥150,000</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">待还利息</div>
+                        <div class="stat-value">¥4,500</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">下次还款日</div>
+                        <div class="stat-value">2026-03-15</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">还款状态</div>
+                        <div class="stat-value" style="color: #34c759;">正常</div>
+                    </div>
+                </div>
+                <div class="content-card">
+                    <h3>还款计划</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>期数</th>
+                                <th>还款日期</th>
+                                <th>本金</th>
+                                <th>利息</th>
+                                <th>状态</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>第1期</td>
+                                <td>2026-03-15</td>
+                                <td>¥50,000</td>
+                                <td>¥1,500</td>
+                                <td><span class="status pending">待还</span></td>
+                                <td><button class="submit-btn" style="padding: 6px 12px; font-size: 12px;">提前还款</button></td>
+                            </tr>
+                            <tr>
+                                <td>第2期</td>
+                                <td>2026-04-15</td>
+                                <td>¥50,000</td>
+                                <td>¥1,500</td>
+                                <td><span class="status success">待还</span></td>
+                                <td><button class="submit-btn" style="padding: 6px 12px; font-size: 12px;">提前还款</button></td>
+                            </tr>
+                            <tr>
+                                <td>第3期</td>
+                                <td>2026-05-15</td>
+                                <td>¥50,000</td>
+                                <td>¥1,500</td>
+                                <td><span class="status success">待还</span></td>
+                                <td><button class="submit-btn" style="padding: 6px 12px; font-size: 12px;">提前还款</button></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- RTV评分 -->
+            <section id="rtv" class="page-section">
+                <h1 class="page-title">RTV评分</h1>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-label">RTV评分</div>
+                        <div class="stat-value" style="color: #FF6600;">85</div>
+                        <div class="stat-change up">↑ 较上月+5</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">客流-流水相关性</div>
+                        <div class="stat-value">0.92</div>
+                        <div class="stat-change up">优秀</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">异常交易检测</div>
+                        <div class="stat-value">正常</div>
+                        <div class="stat-change">无异常</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">数据质量</div>
+                        <div class="stat-value">A+</div>
+                    </div>
+                </div>
+                <div class="content-card">
+                    <h3>RTV模型说明</h3>
+                    <p style="color: #86868b; line-height: 1.8;">
+                        RTV（Remaining to Value）模型通过多维数据验证，实时评估商户信用风险：<br><br>
+                        1. <strong>客流数据</strong>：基于AI视频分析的进店人数<br>
+                        2. <strong>流水数据</strong>：支付宝/微信支付的交易金额<br>
+                        3. <strong>相关性分析</strong>：客流与流水的匹配度<br>
+                        4. <strong>异常检测</strong>：识别刷单、洗钱等异常行为<br><br>
+                        <strong>评分标准：</strong> 90分以上为A级，80-90分为B级，70-80分为C级，70分以下为D级
+                    </p>
+                </div>
+                <div class="content-card">
+                    <h3>近期评分变化</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>日期</th>
+                                <th>RTV评分</th>
+                                <th>客流-流水相关性</th>
+                                <th>变化</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>2026-03-08</td>
+                                <td>85</td>
+                                <td>0.92</td>
+                                <td><span class="status success">↑ +2</span></td>
+                            </tr>
+                            <tr>
+                                <td>2026-03-01</td>
+                                <td>83</td>
+                                <td>0.89</td>
+                                <td><span class="status success">↑ +3</span></td>
+                            </tr>
+                            <tr>
+                                <td>2026-02-22</td>
+                                <td>80</td>
+                                <td>0.85</td>
+                                <td><span class="status success">↑ +1</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- 预警中心 -->
+            <section id="alerts" class="page-section">
+                <h1 class="page-title">预警中心</h1>
+                <div class="alert-list-full">
+                    <div class="alert-item warning">
+                        <span class="alert-icon">⚠️</span>
+                        <div class="alert-content">
+                            <div class="alert-title">流水波动提醒</div>
+                            <div class="alert-desc">今日流水较昨日下降15%，请关注</div>
+                        </div>
+                        <span class="alert-time">10分钟前</span>
+                    </div>
+                    <div class="alert-item info">
+                        <span class="alert-icon">ℹ️</span>
+                        <div class="alert-content">
+                            <div class="alert-title">融资申请通过</div>
+                            <div class="alert-desc">您的50万授信申请已获批</div>
+                        </div>
+                        <span class="alert-time">2小时前</span>
+                    </div>
+                    <div class="alert-item danger">
+                        <span class="alert-icon">🔴</span>
+                        <div class="alert-content">
+                            <div class="alert-title">征信预警</div>
+                            <div class="alert-desc">您的信用评分即将调整</div>
+                        </div>
+                        <span class="alert-time">昨天</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 资质认证 -->
+            <section id="certification" class="page-section">
+                <h1 class="page-title">资质认证</h1>
+                <div class="content-card">
+                    <h3>商户资质</h3>
+                    <div class="cert-list">
+                        <div class="cert-item">
+                            <span class="cert-icon">✅</span>
+                            <div class="cert-info">
+                                <div class="cert-title">营业执照</div>
+                                <div class="cert-status">已认证</div>
+                            </div>
+                        </div>
+                        <div class="cert-item">
+                            <span class="cert-icon">✅</span>
+                            <div class="cert-info">
+                                <div class="cert-title">食品经营许可证</div>
+                                <div class="cert-status">已认证</div>
+                            </div>
+                        </div>
+                        <div class="cert-item">
+                            <span class="cert-icon">⏳</span>
+                            <div class="cert-info">
+                                <div class="cert-title">税务登记证</div>
+                                <div class="cert-status">认证中</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 数据导出 -->
+            <section id="export" class="page-section">
+                <h1 class="page-title">数据导出</h1>
+                <div class="content-card">
+                    <h3>导出报表</h3>
+                    <div class="supplier-grid">
+                        <div class="supplier-card">
+                            <div style="font-size: 40px;">📊</div>
+                            <h4>流水报表</h4>
+                            <p>导出指定时间段的流水记录</p>
+                            <button class="submit-btn" style="padding: 10px 20px;">导出Excel</button>
+                        </div>
+                        <div class="supplier-card">
+                            <div style="font-size: 40px;">📈</div>
+                            <h4>经营分析</h4>
+                            <p>导出经营数据分析报告</p>
+                            <button class="submit-btn" style="padding: 10px 20px;">导出PDF</button>
+                        </div>
+                        <div class="supplier-card">
+                            <div style="font-size: 40px;">🏦</div>
+                            <h4>融资记录</h4>
+                            <p>导出融资和还款记录</p>
+                            <button class="submit-btn" style="padding: 10px 20px;">导出Excel</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 设置 -->
+            <section id="settings" class="page-section">
+                <h1 class="page-title">设置</h1>
+                <div class="content-card">
+                    <h3>账户设置</h3>
+                    <form class="settings-form">
+                        <div class="form-group">
+                            <label>店铺名称</label>
+                            <input type="text" value="张老板的小店">
+                        </div>
+                        <div class="form-group">
+                            <label>联系电话</label>
+                            <input type="tel" value="138****8888">
+                        </div>
+                        <div class="form-group">
+                            <label>通知设置</label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" checked> 接收流水变动通知
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" checked> 接收预警通知
+                            </label>
+                        </div>
+                        <button type="submit" class="submit-btn">保存设置</button>
+                    </form>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <style>
+        .page-section { display: none; }
+        .page-section.active { display: block; }
+        .chart-placeholder { display: flex; align-items: flex-end; justify-content: space-around; height: 200px; padding: 20px; }
+        .chart-bar { width: 40px; background: linear-gradient(180deg, #FF6600, #ff8533); border-radius: 8px 8px 0 0; display: flex; align-items: flex-end; justify-content: center; color: white; font-size: 12px; padding-bottom: 8px; }
+        .alert-list, .alert-list-full { display: flex; flex-direction: column; gap: 16px; }
+        .alert-item { display: flex; align-items: center; gap: 16px; padding: 16px; background: #f5f5f7; border-radius: 12px; }
+        .alert-item.warning { border-left: 4px solid #ff9500; }
+        .alert-item.info { border-left: 4px solid #007aff; }
+        .alert-item.danger { border-left: 4px solid #ff3b30; }
+        .alert-icon { font-size: 24px; }
+        .alert-content { flex: 1; }
+        .alert-title { font-weight: 600; color: #1d1d1f; }
+        .alert-desc { font-size: 14px; color: #86868b; }
+        .alert-time { font-size: 12px; color: #86868b; }
+        .status { padding: 4px 12px; border-radius: 20px; font-size: 12px; }
+        .status.success { background: #d4edda; color: #28a745; }
+        .status.pending { background: #fff3cd; color: #856404; }
+        .video-placeholder { height: 300px; background: #f5f5f7; border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .cert-list { display: flex; flex-direction: column; gap: 16px; }
+        .cert-item { display: flex; align-items: center; gap: 16px; padding: 16px; background: #f5f5f7; border-radius: 12px; }
+        .cert-icon { font-size: 24px; }
+        .cert-title { font-weight: 600; }
+        .cert-status { font-size: 14px; color: #86868b; }
+        .checkbox-label { display: block; margin: 12px 0; }
+        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 14px 18px; border: 2px solid #e5e5e5; border-radius: 12px; font-size: 16px; margin-top: 8px; }
+        .form-group textarea { min-height: 100px; }
+        .supplier-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 24px; }
+        .supplier-card { background: #f5f5f7; border-radius: 16px; padding: 32px; text-align: center; }
+        .supplier-card h4 { margin: 16px 0 8px; }
+        .supplier-card p { color: #86868b; font-size: 14px; margin-bottom: 16px; }
+    </style>
+
+    <script>
+        // ========================================
+        // 移动端菜单交互
+        // ========================================
+        const menuToggle = document.getElementById('menuToggle');
+        const sidebar = document.querySelector('.sidebar');
+        const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+        if (menuToggle && sidebar) {
+            menuToggle.addEventListener('click', () => {
+                sidebar.classList.toggle('active');
+                if (sidebarOverlay) sidebarOverlay.classList.toggle('active');
+            });
+
+            if (sidebarOverlay) {
+                sidebarOverlay.addEventListener('click', () => {
+                    sidebar.classList.remove('active');
+                    sidebarOverlay.classList.remove('active');
+                });
+            }
+        }
+
+        // ========================================
+        // 侧边栏折叠功能 (桌面端)
+        // ========================================
+        const sidebarCollapseBtn = document.createElement('li');
+        sidebarCollapseBtn.innerHTML = '<a href="javascript:;" id="sidebarCollapseToggle"><span class="icon">◀</span><span class="collapse-text">收起侧边栏</span></a>';
+        const sidebarMenu = document.querySelector('.sidebar-menu');
+        if (sidebarMenu) {
+            sidebarMenu.appendChild(sidebarCollapseBtn);
+        }
+
+        const sidebarCollapseToggle = document.getElementById('sidebarCollapseToggle');
+        if (sidebarCollapseToggle) {
+            sidebarCollapseToggle.addEventListener('click', () => {
+                sidebar.classList.toggle('collapsed');
+                const collapseText = sidebarCollapseToggle.querySelector('.collapse-text');
+                const collapseIcon = sidebarCollapseToggle.querySelector('.icon');
+                
+                if (sidebar.classList.contains('collapsed')) {
+                    if (collapseText) collapseText.textContent = '展开侧边栏';
+                    if (collapseIcon) collapseIcon.textContent = '▶';
+                    document.querySelectorAll('.sidebar-menu a span:not(.icon)').forEach(span => {
+                        span.style.display = 'none';
+                    });
+                    document.querySelectorAll('.sidebar-menu a').forEach(a => {
+                        a.style.justifyContent = 'center';
+                        a.style.padding = '14px';
+                    });
+                } else {
+                    if (collapseText) collapseText.textContent = '收起侧边栏';
+                    if (collapseIcon) collapseIcon.textContent = '◀';
+                    document.querySelectorAll('.sidebar-menu a span:not(.icon)').forEach(span => {
+                        span.style.display = '';
+                    });
+                    document.querySelectorAll('.sidebar-menu a').forEach(a => {
+                        a.style.justifyContent = '';
+                        a.style.padding = '';
+                    });
+                }
+            });
+        }
+
+        // ========================================
+        // 面包屑导航
+        // ========================================
+        // 在页面顶部添加面包屑
+        const mainContent = document.querySelector('.main-content');
+        if (mainContent) {
+            const breadcrumb = document.createElement('div');
+            breadcrumb.className = 'breadcrumb';
+            breadcrumb.innerHTML = `
+                <span class="breadcrumb-item">首页</span>
+                <span class="breadcrumb-separator">›</span>
+                <span class="breadcrumb-item active" id="breadcrumbCurrent">数据概览</span>
+            `;
+            mainContent.insertBefore(breadcrumb, mainContent.firstChild);
+        }
+
+        // 页面导航时更新面包屑
+        function updateBreadcrumb(pageName) {
+            const breadcrumbCurrent = document.getElementById('breadcrumbCurrent');
+            if (breadcrumbCurrent) {
+                breadcrumbCurrent.textContent = pageName;
+            }
+            // 移动端自动关闭侧边栏
+            if (window.innerWidth <= 1024 && sidebar) {
+                sidebar.classList.remove('active');
+                if (sidebarOverlay) sidebarOverlay.classList.remove('active');
+            }
+        }
+
+        // 页面标题映射
+        const pageNames = {
+            'overview': '数据概览',
+            'transactions': '流水管理',
+            'customers': '客流分析',
+            'suppliers': '供应商管理',
+            'payments': '支付渠道',
+            'credit': '融资授信',
+            'repayment': '还款管理',
+            'rtv': 'RTV评分',
+            'alerts': '预警中心',
+            'certification': '资质认证',
+            'export': '数据导出',
+            'settings': '设置'
+        };
+
+        // ========================================
+        // Toast 提示组件
+        // ========================================
+        const toastContainer = document.getElementById('toastContainer');
+
+        function showToast(type, title, message, duration = 4000) {
+            if (!toastContainer) return;
+
+            const icons = {
+                success: '✅',
+                error: '❌',
+                warning: '⚠️',
+                info: 'ℹ️'
+            };
+
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.innerHTML = `
+                <span class="toast-icon">${icons[type] || 'ℹ️'}</span>
+                <div class="toast-content">
+                    <div class="toast-title">${title}</div>
+                    <div class="toast-message">${message}</div>
+                </div>
+                <button class="toast-close" onclick="this.parentElement.remove()">×</button>
+            `;
+
+            toastContainer.appendChild(toast);
+
+            // 动画入场
+            requestAnimationFrame(() => {
+                toast.classList.add('show');
+            });
+
+            // 自动移除
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 300);
+            }, duration);
+        }
+
+        // 便捷方法
+        const toast = {
+            success: (title, msg) => showToast('success', title, msg),
+            error: (title, msg) => showToast('error', title, msg),
+            warning: (title, msg) => showToast('warning', title, msg),
+            info: (title, msg) => showToast('info', title, msg)
+        };
+
+        // ========================================
+        // 加载状态管理
+        // ========================================
+        const loadingOverlay = document.getElementById('loadingOverlay');
+
+        function showLoading(text = '加载中...') {
+            if (!loadingOverlay) return;
+            const loadingText = loadingOverlay.querySelector('.loading-text');
+            if (loadingText) loadingText.textContent = text;
+            loadingOverlay.classList.add('active');
+        }
+
+        function hideLoading() {
+            if (!loadingOverlay) return;
+            loadingOverlay.classList.remove('active');
+        }
+
+        // 按钮加载状态
+        function setButtonLoading(btn, loading = true) {
+            if (!btn) return;
+            if (loading) {
+                btn.classList.add('btn-loading');
+                btn.dataset.originalText = btn.textContent;
+                btn.textContent = '处理中...';
+                btn.disabled = true;
+            } else {
+                btn.classList.remove('btn-loading');
+                btn.textContent = btn.dataset.originalText || btn.textContent;
+                btn.disabled = false;
+            }
+        }
+
+        // 页面导航
+        document.querySelectorAll('.sidebar-menu a[data-page]').forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                document.querySelectorAll('.sidebar-menu a').forEach(a => a.classList.remove('active'));
+                this.classList.add('active');
+                const pageId = this.getAttribute('data-page');
+                document.querySelectorAll('.page-section').forEach(section => section.classList.remove('active'));
+                document.getElementById(pageId).classList.add('active');
+                
+                // 更新面包屑
+                const pageName = pageNames[pageId] || pageId;
+                updateBreadcrumb(pageName);
+                
+                // 更新页面标题
+                const pageTitle = document.querySelector('.page-title');
+                if (pageTitle) {
+                    pageTitle.textContent = pageName;
+                }
+            });
+        });
+
+        // 添加流水
+        function addTransaction() {
+            const amount = prompt('请输入金额:', '');
+            const type = prompt('请输入类型 (收入/支出):', '收入');
+            const counterparty = prompt('请输入对方账户:', '');
+            if (amount && type && counterparty) {
+                toast.success('添加成功', `金额: ¥${amount}，类型: ${type}`);
+            }
+        }
+
+        // 添加供应商
+        function addSupplier() {
+            const name = prompt('请输入供应商名称:', '');
+            const contact = prompt('请输入联系人:', '');
+            const phone = prompt('请输入联系电话:', '');
+            if (name && contact && phone) {
+                toast.success('添加成功', `供应商: ${name} 已添加`);
+            }
+        }
+
+        // 申请支付渠道
+        function applyPaymentChannel(channel) {
+            if (confirm('确定要申请接入 ' + channel + ' 吗？')) {
+                showLoading('提交申请中...');
+                setTimeout(() => {
+                    hideLoading();
+                    toast.success('申请已提交', `${channel} 申请预计3-5个工作日内审核`);
+                }, 1000);
+            }
+        }
+
+        // 提交融资申请
+        function submitCreditApplication(event) {
+            event.preventDefault();
+            
+            // 表单验证
+            if (!validateForm(event.target)) {
+                toast.error('验证失败', '请填写所有必填项');
+                return;
+            }
+            
+            const amount = document.getElementById('creditAmount').value;
+            const term = document.getElementById('creditTerm').value;
+            const purpose = document.getElementById('creditPurpose').value;
+            
+            const btn = event.target.querySelector('.submit-btn');
+            setButtonLoading(btn, true);
+            
+            setTimeout(() => {
+                setButtonLoading(btn, false);
+                toast.success('申请已提交', `金额: ¥${amount}，期限: ${term}`);
+                event.target.reset();
+            }, 1500);
+        }
+
+        // 提前还款
+        function earlyRepayment(period) {
+            if (confirm('确定要提前还款第 ' + period + ' 期吗？')) {
+                showLoading('提交还款申请...');
+                setTimeout(() => {
+                    hideLoading();
+                    toast.success('申请已提交', `第 ${period} 期提前还款申请已提交`);
+                }, 1000);
+            }
+        }
+
+        // 导出报表
+        function exportReport(type) {
+            const btn = event.target;
+            setButtonLoading(btn, true);
+            
+            setTimeout(() => {
+                setButtonLoading(btn, false);
+                toast.success('导出成功', `${type} 已生成`);
+            }, 1500);
+        }
+
+        // 保存设置
+        function saveSettings(event) {
+            event.preventDefault();
+            const btn = event.target.querySelector('.submit-btn');
+            setButtonLoading(btn, true);
+            
+            setTimeout(() => {
+                setButtonLoading(btn, false);
+                toast.success('保存成功', '设置已更新');
+            }, 1000);
+        }
+
+        // ========================================
+        // 表单验证增强
+        // ========================================
+        function validateForm(form) {
+            let isValid = true;
+            const inputs = form.querySelectorAll('input[required], select[required], textarea[required]');
+            
+            inputs.forEach(input => {
+                if (!input.value.trim()) {
+                    input.classList.add('error');
+                    isValid = false;
+                    
+                    // 显示错误提示
+                    const errorMsg = document.createElement('div');
+                    errorMsg.className = 'form-error';
+                    errorMsg.style.cssText = 'color: #ff3b30; font-size: 12px; margin-top: 4px;';
+                    errorMsg.textContent = '此字段为必填项';
+                    
+                    // 移除已存在的错误提示
+                    const existingError = input.parentElement.querySelector('.form-error');
+                    if (existingError) existingError.remove();
+                    
+                    input.parentElement.appendChild(errorMsg);
+                } else {
+                    input.classList.remove('error');
+                    const existingError = input.parentElement.querySelector('.form-error');
+                    if (existingError) existingError.remove();
+                }
+                
+                // 失焦时验证
+                input.addEventListener('blur', function() {
+                    if (!this.value.trim()) {
+                        this.classList.add('error');
+                    } else {
+                        this.classList.remove('error');
+                        const existingError = this.parentElement.querySelector('.form-error');
+                        if (existingError) existingError.remove();
+                    }
+                });
+                
+                // 输入时移除错误状态
+                input.addEventListener('input', function() {
+                    this.classList.remove('error');
+                    const existingError = this.parentElement.querySelector('.form-error');
+                    if (existingError) existingError.remove();
+                });
+            });
+            
+            return isValid;
+        }
+
+        // ========================================
+        // 键盘导航支持
+        // ========================================
+        document.addEventListener('keydown', function(e) {
+            // ESC 关闭移动端菜单
+            if (e.key === 'Escape') {
+                if (sidebar && sidebar.classList.contains('active')) {
+                    sidebar.classList.remove('active');
+                    if (sidebarOverlay) sidebarOverlay.classList.remove('active');
+                }
+            }
+            
+            // Ctrl/Cmd + K 打开搜索（预留）
+            if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+                e.preventDefault();
+                toast.info('快捷键', '搜索功能开发中...');
+            }
+        });
+
+        // Tab 键导航高亮
+        document.querySelectorAll('button, a, input, select, textarea').forEach(el => {
+            el.addEventListener('focus', function() {
+                this.classList.add('keyboard-focused');
+            });
+            el.addEventListener('blur', function() {
+                this.classList.remove('keyboard-focused');
+            });
+        });
+
+        // Enter 键提交表单
+        document.querySelectorAll('form').forEach(form => {
+            form.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    // 如果不是文本域则提交
+                    if (e.target.tagName !== 'TEXTAREA') {
+                        e.preventDefault();
+                        form.dispatchEvent(new Event('submit', { bubbles: true }));
+                    }
+                }
+            });
+        });
+
+        // 实时时钟
+        function updateTime() {
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            const dateStr = now.toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' });
+            // 可以添加到页面显示
+        }
+        setInterval(updateTime, 1000);
+
+        // 模拟数据刷新
+        function refreshData() {
+            // 刷新数据概览
+            const statValues = document.querySelectorAll('.stat-value');
+            if (statValues.length > 0) {
+                // 随机更新一些数值模拟实时数据
+                console.log('数据已刷新:', new Date().toLocaleString());
+            }
+        }
+        setInterval(refreshData, 30000); // 每30秒刷新
+
+        // 导出按钮事件绑定
+        document.querySelectorAll('.supplier-card button').forEach((btn, index) => {
+            btn.addEventListener('click', function() {
+                const card = this.closest('.supplier-card');
+                const title = card.querySelector('h4').textContent;
+                exportReport(title);
+            });
+        });
+
+        // 还款按钮事件绑定
+        document.querySelectorAll('[onclick^="earlyRepayment"]').forEach(btn => {
+            const period = btn.closest('tr').querySelector('td:first-child').textContent;
+            btn.addEventListener('click', () => earlyRepayment(period.replace('第', '').replace('期', '')));
+        });
+
+        // 设置表单提交
+        document.querySelector('.settings-form')?.addEventListener('submit', saveSettings);
+
+        // 融资表单提交
+        document.querySelector('.credit-form')?.addEventListener('submit', submitCreditApplication);
+
+        // ========================================
+        // 空状态处理
+        // ========================================
+        function checkEmptyState(tableBody, emptyMessage = '暂无数据') {
+            if (!tableBody || tableBody.rows.length === 0) {
+                const emptyState = document.createElement('tr');
+                emptyState.innerHTML = `
+                    <td colspan="10" style="text-align: center; padding: 60px 20px;">
+                        <div class="empty-state">
+                            <div class="empty-state-icon">📭</div>
+                            <div class="empty-state-title">${emptyMessage}</div>
+                            <div class="empty-state-desc">暂无记录，请添加数据</div>
+                        </div>
+                    </td>
+                `;
+                tableBody.appendChild(emptyState);
+                return true;
+            }
+            return false;
+        }
+
+        // 示例：在页面加载后检查空状态
+        // checkEmptyState(document.querySelector('#transactions tbody'), '暂无流水记录');
+
+        // 空状态提示函数（可在控制台调用测试）
+        window.showEmptyState = function(containerSelector, options = {}) {
+            const container = document.querySelector(containerSelector);
+            if (!container) return;
+            
+            const {
+                icon = '📭',
+                title = '暂无数据',
+                desc = '暂无记录，请添加数据',
+                actionText = '添加数据',
+                actionClick = null
+            } = options;
+            
+            container.innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-state-icon">${icon}</div>
+                    <div class="empty-state-title">${title}</div>
+                    <div class="empty-state-desc">${desc}</div>
+                    ${actionClick ? `<button class="empty-state-action" onclick="${actionClick}">${actionText}</button>` : ''}
+                </div>
+            `;
+        };
+
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            // 滚动显示返回顶部按钮
+            const backToTopBtn = document.createElement('button');
+            backToTopBtn.id = 'backToTop';
+            backToTopBtn.innerHTML = '↑';
+            backToTopBtn.title = '返回顶部';
+            backToTopBtn.style.cssText = `
+                position: fixed;
+                bottom: 30px;
+                right: 30px;
+                width: 50px;
+                height: 50px;
+                border-radius: 50%;
+                background: linear-gradient(135deg, #FF6600, #ff8533);
+                color: white;
+                border: none;
+                font-size: 24px;
+                cursor: pointer;
+                box-shadow: 0 4px 16px rgba(255, 102, 0, 0.3);
+                opacity: 0;
+                visibility: hidden;
+                transition: all 0.3s ease;
+                z-index: 1000;
+            `;
+            document.body.appendChild(backToTopBtn);
+
+            window.addEventListener('scroll', function() {
+                if (window.scrollY > 300) {
+                    backToTopBtn.style.opacity = '1';
+                    backToTopBtn.style.visibility = 'visible';
+                } else {
+                    backToTopBtn.style.opacity = '0';
+                    backToTopBtn.style.visibility = 'hidden';
+                }
+            });
+
+            backToTopBtn.addEventListener('click', function() {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            });
+        });
+
+        console.log('餐饮供应链金融平台 - Dashboard 已加载');
+    </script>
+
+    <!-- 返回顶部按钮 -->
+    <button id="backToTop" onclick="window.scrollTo({top: 0, behavior: 'smooth'})" style="
+        position: fixed;
+        bottom: 30px;
+        right: 30px;
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #FF6600, #ff8533);
+        color: white;
+        border: none;
+        font-size: 24px;
+        cursor: pointer;
+        box-shadow: 0 4px 16px rgba(255, 102, 0, 0.3);
+        display: none;
+        z-index: 1000;
+    " title="返回顶部">↑</button>
+
+    <script>
+        // 滚动显示返回顶部按钮
+        window.addEventListener('scroll', function() {
+            const btn = document.getElementById('backToTop');
+            if (btn) {
+                if (window.scrollY > 300) {
+                    btn.style.display = 'block';
+                } else {
+                    btn.style.display = 'none';
+                }
+            }
+        });
+    </script>
+</body>
+</html>
