@@ -1,32 +1,64 @@
-# 🍽️ 餐饮供应链金融赋能平台
+# 🍽️ 餐饮供应链金融赋能平台 (FoodVerify)
 
 基于多维数据验证的餐饮供应链金融赋能平台 - 商用级风控与信贷评估系统。
 
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Version](https://img.shields.io/badge/version-1.1.0-green.svg)](package.json)
+
+## ✨ 功能特性
+
+- 📊 **数据概览** - 实时客流、流水、授信额度监控
+- 💰 **流水管理** - 数字化资金往来记录
+- 👥 **客流分析** - AI视频客流统计与分析
+- 🚚 **供应商管理** - 供应链上下游协同
+- 💳 **支付渠道** - 支付宝/微信支付接入
+- 🏦 **融资授信** - 基于RTV评分的智能授信
+- 💵 **还款管理** - 分期还款计划与提醒
+- 📈 **RTV评分** - 多维数据信用评估模型
+- ⚠️ **预警中心** - 风险预警与通知
+
 ## 📥 下载安装
 
-### macOS 版本
-点击下载：[餐饮供应链金融平台-macOS.zip](https://github.com/JACKYwyj/restaurant-supply-chain-finance/releases/download/v1.0.0/%E9%A4%90%E9%A5%AE%E4%BE%9B%E5%BA%94%E9%93%BA%E9%93%81%E9%87%91%E8%B4%A7%E5%B9%B3%E5%8F%B0%E5%8F%B0-macOS.zip)
-
 ### Windows 版本
-（待构建）
+- [餐饮供应链金融平台 Setup 1.1.0.exe](https://github.com/JACKYwyj/restaurant-supply-chain-finance/releases/latest)
+
+### macOS 版本
+- [餐饮供应链金融平台-1.1.0-arm64.dmg](https://github.com/JACKYwyj/restaurant-supply-chain-finance/releases/latest)
+
+### 浏览器访问
+直接打开 `frontend/index.html` 即可体验
 
 ---
 
 ## 🚀 快速开始
 
-### macOS 安装
-1. 下载 macOS 版本
-2. 解压 zip 文件
-3. 双击打开应用
+### 开发模式
 
-### 浏览器访问
-直接在浏览器打开 `frontend/index.html`
-
-### 后端服务
 ```bash
+# 克隆项目
+git clone https://github.com/JACKYwyj/restaurant-supply-chain-finance.git
+cd restaurant-supply-chain-finance
+
+# 安装依赖
+npm install
+
+# 启动前端
+# 直接打开 frontend/index.html
+
+# 启动后端 (可选)
 cd backend
 pip install -r requirements.txt
 python app.py
+```
+
+### 构建安装包
+
+```bash
+# Windows
+npm run build:win
+
+# macOS
+npm run build:mac
 ```
 
 ---
@@ -36,20 +68,38 @@ python app.py
 ```
 ├── backend/           # Flask 后端
 │   ├── api/          # API 接口
-│   ├── services/      # 业务服务
-│   └── models.py      # 数据模型
-├── frontend/          # Web 前端
-│   ├── index.html     # 登录页
-│   └── dashboard.html # 管理后台
+│   ├── services/     # 业务服务
+│   └── models.py     # 数据模型
+├── frontend/         # Web 前端
+│   ├── index.html    # 登录页
+│   ├── dashboard.html # 商户后台
+│   ├── bank.html     # 银行/投资者端
+│   └── css/          # 样式文件
 ├── cv/               # 客流分析 CV 模块
-└── electron/          # 桌面应用入口
+├── electron/         # Electron 桌面应用
+└── dist/            # 构建产物
 ```
 
 ---
 
 ## 🛠 技术栈
 
-- **后端**: Flask + SQLAlchemy + JWT
-- **前端**: HTML5 + CSS3 + JavaScript
-- **CV**: OpenCV + YOLO
-- **桌面**: Electron
+| 层级 | 技术 |
+|------|------|
+| 后端 | Flask + SQLAlchemy + JWT |
+| 前端 | HTML5 + CSS3 + JavaScript |
+| CV | OpenCV + YOLO |
+| 桌面 | Electron |
+| 数据库 | SQLite (开发) / MySQL (生产) |
+
+---
+
+## 📄 许可证
+
+MIT License - 查看 [LICENSE](LICENSE) 文件
+
+---
+
+## 👤 作者
+
+Jacky Wang - [GitHub](https://github.com/JACKYwyj)
