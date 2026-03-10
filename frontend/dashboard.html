@@ -203,10 +203,26 @@
                 </div>
                 <div class="content-card">
                     <h3>实时客流监控</h3>
-                    <div class="video-placeholder">
-                        <p>📹 摄像头客流分析演示</p>
-                        <p style="margin-top: 10px; color: #86868b;">运行 cv/客流分析/demo.py 启动实时分析</p>
+                    <div class="video-container" id="videoContainer">
+                        <video id="cameraVideo" autoplay playsinline muted></video>
+                        <div class="video-overlay" id="videoOverlay">
+                            <p>📹 点击下方按钮开启实时客流分析</p>
+                            <button class="submit-btn" onclick="startCamera()">📷 开启摄像头</button>
+                        </div>
+                        <div class="stats-overlay" id="statsOverlay" style="display: none;">
+                            <div class="stat-item"><span class="stat-label">进店</span><span class="stat-value" id="enterCount">0</span></div>
+                            <div class="stat-item"><span class="stat-label">在店</span><span class="stat-value" id="shopCount">0</span></div>
+                            <div class="stat-item"><span class="stat-label">离开</span><span class="stat-value" id="exitCount">0</span></div>
+                        </div>
                     </div>
+                    <div style="margin-top: 15px; display: flex; gap: 10px;">
+                        <button class="submit-btn" onclick="startCamera()">📷 开启摄像头</button>
+                        <button class="submit-btn secondary" onclick="stopCamera()">⏹ 关闭</button>
+                        <button class="submit-btn" style="background: #34C759;" onclick="toggleDetection()">🤖 AI客流分析</button>
+                    </div>
+                    <p style="margin-top: 10px; color: #86868b; font-size: 12px;">
+                        💡 提示：开启摄像头需要授予浏览器访问权限，支持手机/电脑摄像头
+                    </p>
                 </div>
             </section>
 
@@ -634,6 +650,17 @@
         .status.success { background: #d4edda; color: #28a745; }
         .status.pending { background: #fff3cd; color: #856404; }
         .video-placeholder { height: 300px; background: #f5f5f7; border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .video-container { position: relative; height: 360px; background: #000; border-radius: 12px; overflow: hidden; }
+        #cameraVideo { width: 100%; height: 100%; object-fit: cover; }
+        .video-overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); display: flex; flex-direction: column; align-items: center; justify-content: center; color: #fff; }
+        .video-overlay p { margin-bottom: 20px; font-size: 16px; }
+        .stats-overlay { position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.7); padding: 15px; border-radius: 10px; display: flex; gap: 20px; }
+        .stats-overlay .stat-item { display: flex; flex-direction: column; align-items: center; }
+        .stats-overlay .stat-label { font-size: 12px; color: #aaa; }
+        .stats-overlay .stat-value { font-size: 24px; font-weight: bold; color: #fff; }
+        #enterCount { color: #34C759 !important; }
+        #shopCount { color: #FF9500 !important; }
+        #exitCount { color: #FF3B30 !important; }
         .cert-list { display: flex; flex-direction: column; gap: 16px; }
         .cert-item { display: flex; align-items: center; gap: 16px; padding: 16px; background: #f5f5f7; border-radius: 12px; }
         .cert-icon { font-size: 24px; }
@@ -1171,6 +1198,118 @@
         });
 
         console.log('餐饮供应链金融平台 - Dashboard 已加载');
+
+        // ========================================
+        // 实时摄像头功能
+        // ========================================
+        let videoStream = null;
+        let detectionInterval = null;
+        let enterCount = 0;
+        let exitCount = 0;
+        let shopCount = 0;
+
+        async function startCamera() {
+            const video = document.getElementById('cameraVideo');
+            const overlay = document.getElementById('videoOverlay');
+            const statsOverlay = document.getElementById('statsOverlay');
+            
+            try {
+                // 请求摄像头权限
+                videoStream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { 
+                        facingMode: 'environment', // 后置摄像头
+                        width: { ideal: 1280 },
+                        height: { ideal: 720 }
+                    } 
+                });
+                
+                video.srcObject = videoStream;
+                overlay.style.display = 'none';
+                statsOverlay.style.display = 'flex';
+                
+                showToast('📷 摄像头已开启', 'success');
+                
+            } catch (err) {
+                console.error('摄像头访问失败:', err);
+                if (err.name === 'NotAllowedError') {
+                    showToast('❌ 请允许浏览器访问摄像头权限', 'error');
+                } else if (err.name === 'NotFoundError') {
+                    showToast('❌ 未找到可用摄像头设备', 'error');
+                } else {
+                    showToast('❌ 摄像头访问失败: ' + err.message, 'error');
+                }
+            }
+        }
+
+        function stopCamera() {
+            const video = document.getElementById('cameraVideo');
+            const overlay = document.getElementById('videoOverlay');
+            const statsOverlay = document.getElementById('statsOverlay');
+            
+            if (videoStream) {
+                videoStream.getTracks().forEach(track => track.stop());
+                videoStream = null;
+            }
+            
+            video.srcObject = null;
+            overlay.style.display = 'flex';
+            statsOverlay.style.display = 'none';
+            
+            if (detectionInterval) {
+                clearInterval(detectionInterval);
+                detectionInterval = null;
+            }
+            
+            showToast('⏹ 摄像头已关闭', 'info');
+        }
+
+        function toggleDetection() {
+            const video = document.getElementById('cameraVideo');
+            
+            if (!videoStream) {
+                showToast('❌ 请先开启摄像头', 'error');
+                return;
+            }
+            
+            if (detectionInterval) {
+                // 停止检测
+                clearInterval(detectionInterval);
+                detectionInterval = null;
+                showToast('🤖 AI客流分析已停止', 'info');
+                return;
+            }
+            
+            // 模拟AI客流检测（演示版）
+            // 实际项目中可以连接后端Python服务进行真实检测
+            showToast('🤖 AI客流分析已开启（演示模式）', 'success');
+            
+            detectionInterval = setInterval(() => {
+                // 模拟数据 - 实际项目中这里应该调用后端API
+                const random = Math.random();
+                if (random < 0.1) {
+                    enterCount++;
+                    shopCount++;
+                    updateStats();
+                } else if (random > 0.9 && shopCount > 0) {
+                    exitCount++;
+                    shopCount--;
+                    updateStats();
+                }
+            }, 2000);
+        }
+
+        function updateStats() {
+            document.getElementById('enterCount').textContent = enterCount;
+            document.getElementById('shopCount').textContent = shopCount;
+            document.getElementById('exitCount').textContent = exitCount;
+        }
+
+        // 页面关闭时清理资源
+        window.addEventListener('beforeunload', function() {
+            if (videoStream) {
+                videoStream.getTracks().forEach(track => track.stop());
+            }
+        });
     </script>
 
     <!-- 返回顶部按钮 -->
