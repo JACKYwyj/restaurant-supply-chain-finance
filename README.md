@@ -4,6 +4,19 @@
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Version](https://img.shields.io/badge/version-1.1.0-green.svg)](package.json)
+[![GitHub Pages](https://img.shields.io/badge/在线演示-GitHub%20Pages-brightgreen.svg)](https://jackywyj.github.io/restaurant-supply-chain-finance/)
+
+## 👀 在线演示
+
+🔗 **GitHub Pages**: https://jackywyj.github.io/restaurant-supply-chain-finance/
+
+> 💡 直接在浏览器中体验完整功能！
+
+## 📸 项目截图
+
+| 登录页面 | 商户后台 |
+|:--------:|:--------:|
+| ![登录页面](screenshots/login.png) | ![商户后台](screenshots/dashboard.png) |
 
 ## ✨ 功能特性
 
