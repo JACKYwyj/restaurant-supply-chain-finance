@@ -758,6 +758,15 @@ tr:hover td {
     box-shadow: 0 8px 24px rgba(255, 102, 0, 0.3);
 }
 
+.submit-btn.secondary {
+    background: #8e8e93;
+}
+
+.submit-btn.secondary:hover {
+    background: #636366;
+    box-shadow: 0 8px 24px rgba(142, 142, 147, 0.3);
+}
+
 /* 页脚 */
 footer {
     text-align: center;
