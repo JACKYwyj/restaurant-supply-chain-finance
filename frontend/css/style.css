@@ -173,22 +173,70 @@ body {
 
 .dashboard-header {
     background: #ffffff;
-    padding: 16px 32px;
+    padding: 12px 20px;
     display: flex;
     justify-content: space-between;
     align-items: center;
     box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
 }
 
+.dashboard-header .logo {
+    padding: 8px 12px;
+}
+
+.dashboard-header .logo-icon {
+    font-size: 24px;
+}
+
 .dashboard-header .logo-text {
-    font-size: 22px;
+    font-size: 18px;
+}
+
+.dashboard-header .user-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.dashboard-header .user-avatar {
+    width: 36px;
+    height: 36px;
+    background: linear-gradient(135deg, #FF6600, #ff8533);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.dashboard-header .user-name {
+    font-size: 14px;
     color: #1d1d1f;
+    font-weight: 500;
 }
 
 .sidebar {
     background: #ffffff;
     padding: 24px 16px;
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+    transition: all 0.3s ease;
+}
+
+/* 侧边栏折叠状态 */
+.sidebar.collapsed {
+    width: 80px;
+    padding: 24px 8px;
+}
+
+.sidebar.collapsed .sidebar-menu a {
+    justify-content: center;
+    padding: 14px;
+}
+
+.sidebar.collapsed .sidebar-menu a .icon {
+    margin: 0;
 }
 
 .sidebar-menu a {
@@ -209,7 +257,165 @@ body {
     color: #FF6600;
 }
 
-/* 统计卡片 */
+/* Dashboard 容器 */
+.dashboard-container {
+    display: flex;
+    min-height: 100vh;
+    padding-top: 64px;
+}
+
+.main-content {
+    flex: 1;
+    margin-left: 260px;
+    padding: 32px;
+    background: #f5f5f7;
+    min-height: calc(100vh - 64px);
+}
+
+.page-title {
+    font-size: 28px;
+    font-weight: 700;
+    color: #1d1d1f;
+    margin-bottom: 24px;
+}
+
+/* 面包屑导航 */
+.breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 20px;
+    font-size: 14px;
+}
+
+.breadcrumb-item {
+    color: #86868b;
+}
+
+.breadcrumb-item.active {
+    color: #1d1d1f;
+    font-weight: 500;
+}
+
+.breadcrumb-separator {
+    color: #86868b;
+    font-size: 18px;
+}
+
+/* ========================================
+   增强交互效果
+======================================== */
+
+/* 按钮波纹效果 */
+.btn, .submit-btn, .login-btn {
+    position: relative;
+    overflow: hidden;
+}
+
+.btn::after, .submit-btn::after, .login-btn::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    transition: width 0.4s ease, height 0.4s ease;
+}
+
+.btn:active::after, .submit-btn:active::after, .login-btn:active::after {
+    width: 300px;
+    height: 300px;
+}
+
+/* 卡片悬停提升效果增强 */
+.stat-card, .content-card, .feature-card, .supplier-card {
+    cursor: pointer;
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.stat-card:hover, .content-card:hover, .feature-card:hover, .supplier-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
+}
+
+/* 点击反馈 */
+.stat-card:active, .content-card:active, .feature-card:active, .supplier-card:active {
+    transform: scale(0.98);
+}
+
+/* 输入框焦点效果 */
+.form-group input:focus, 
+.form-group select:focus, 
+.form-group textarea:focus {
+    border-color: #FF6600;
+    box-shadow: 0 0 0 4px rgba(255, 102, 0, 0.1);
+    outline: none;
+}
+
+/* 输入框错误状态 */
+.form-group input.error, 
+.form-group select.error, 
+.form-group textarea.error {
+    border-color: #ff3b30;
+    box-shadow: 0 0 0 4px rgba(255, 59, 48, 0.1);
+}
+
+/* 标签页切换动画 */
+.page-section {
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* 数字变化动画 */
+.stat-value {
+    transition: color 0.3s ease;
+}
+
+/* ========================================
+   键盘导航支持
+======================================== */
+*:focus {
+    outline: none;
+}
+
+*:focus-visible {
+    outline: 2px solid #FF6600;
+    outline-offset: 2px;
+}
+
+.keyboard-focused {
+    outline: 2px solid #FF6600 !important;
+    outline-offset: 2px !important;
+}
+
+/* 跳过链接（无障碍） */
+.skip-link {
+    position: absolute;
+    top: -40px;
+    left: 0;
+    background: #FF6600;
+    color: white;
+    padding: 8px 16px;
+    z-index: 10000;
+    transition: top 0.3s;
+}
+
+.skip-link:focus {
+    top: 0;
+}
 .stats-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
@@ -297,31 +503,177 @@ tr:hover td {
     background: #fafafa;
 }
 
-/* 响应式 */
+/* ========================================
+   响应式设计 - 移动端适配
+======================================== */
+@media (max-width: 1024px) {
+    .dashboard-container {
+        flex-direction: column;
+    }
+    
+    .sidebar {
+        position: fixed;
+        left: -280px;
+        top: 0;
+        bottom: 0;
+        width: 280px;
+        z-index: 1000;
+        transition: left 0.3s ease;
+        padding-top: 80px;
+        overflow-y: auto;
+    }
+    
+    .sidebar.active {
+        left: 0;
+    }
+    
+    .sidebar-overlay {
+        display: block;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 999;
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.3s ease;
+    }
+    
+    .sidebar-overlay.active {
+        opacity: 1;
+        visibility: visible;
+    }
+    
+    .menu-toggle {
+        display: flex !important;
+    }
+    
+    .main-content {
+        margin-left: 0 !important;
+        padding: 16px !important;
+        padding-top: 80px !important;
+    }
+    
+    .dashboard-header {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 998;
+    }
+}
+
 @media (max-width: 768px) {
     .main-title {
-        font-size: 36px;
+        font-size: 32px;
     }
     
     .subtitle {
-        font-size: 18px;
+        font-size: 16px;
+        margin-bottom: 40px;
     }
     
     .features {
-        gap: 20px;
+        gap: 16px;
     }
     
     .feature-card {
-        padding: 28px 20px;
+        padding: 24px 16px;
+    }
+    
+    .feature-card h3 {
+        font-size: 18px;
     }
     
     .login-section {
         flex-direction: column;
     }
     
+    .login-buttons {
+        flex-direction: column;
+        width: 100%;
+    }
+    
+    .btn {
+        width: 100%;
+        justify-content: flex-start;
+        padding: 16px;
+    }
+    
     .stats-grid {
         grid-template-columns: 1fr;
+        gap: 16px;
     }
+    
+    .stat-card {
+        padding: 20px;
+    }
+    
+    .stat-value {
+        font-size: 28px;
+    }
+    
+    .content-card {
+        padding: 20px;
+        border-radius: 16px;
+    }
+    
+    /* 表格移动端 */
+    .table-wrapper {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    }
+    
+    table {
+        min-width: 600px;
+    }
+    
+    th, td {
+        padding: 12px;
+        font-size: 14px;
+    }
+    
+    /* 移动端表单 */
+    .login-form {
+        padding: 24px;
+        border-radius: 16px;
+    }
+    
+    .form-group input {
+        padding: 14px 16px;
+    }
+    
+    .hero-section {
+        padding: 40px 16px;
+    }
+}
+
+/* 菜单切换按钮 */
+.menu-toggle {
+    display: none;
+    width: 44px;
+    height: 44px;
+    background: #ffffff;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.menu-toggle:hover {
+    background: #f5f5f7;
+}
+
+/* 侧边栏遮罩 */
+.sidebar-overlay {
+    display: none;
 }
 
 /* 动画 */
@@ -412,4 +764,255 @@ footer {
     padding: 32px;
     color: #86868b;
     font-size: 14px;
+}
+
+/* ========================================
+   Toast 提示组件
+======================================== */
+.toast-container {
+    position: fixed;
+    top: 90px;
+    right: 20px;
+    z-index: 10000;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.toast {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 20px;
+    background: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+    min-width: 280px;
+    max-width: 400px;
+    transform: translateX(120%);
+    transition: transform 0.3s ease;
+}
+
+.toast.show {
+    transform: translateX(0);
+}
+
+.toast.success {
+    border-left: 4px solid #34c759;
+}
+
+.toast.error {
+    border-left: 4px solid #ff3b30;
+}
+
+.toast.warning {
+    border-left: 4px solid #ff9500;
+}
+
+.toast.info {
+    border-left: 4px solid #007aff;
+}
+
+.toast-icon {
+    font-size: 24px;
+    flex-shrink: 0;
+}
+
+.toast-content {
+    flex: 1;
+}
+
+.toast-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: #1d1d1f;
+    margin-bottom: 2px;
+}
+
+.toast-message {
+    font-size: 13px;
+    color: #86868b;
+}
+
+.toast-close {
+    background: none;
+    border: none;
+    font-size: 18px;
+    cursor: pointer;
+    color: #86868b;
+    padding: 4px;
+    line-height: 1;
+}
+
+.toast-close:hover {
+    color: #1d1d1f;
+}
+
+/* ========================================
+   加载状态组件
+======================================== */
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+}
+
+.loading-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.loading-spinner {
+    text-align: center;
+}
+
+.spinner {
+    width: 48px;
+    height: 48px;
+    border: 4px solid #f0f0f0;
+    border-top-color: #FF6600;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin: 0 auto 16px;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.loading-text {
+    font-size: 15px;
+    color: #86868b;
+}
+
+/* 按钮加载状态 */
+.btn-loading {
+    position: relative;
+    pointer-events: none;
+    opacity: 0.7;
+}
+
+.btn-loading::after {
+    content: '';
+    position: absolute;
+    width: 18px;
+    height: 18px;
+    border: 2px solid transparent;
+    border-top-color: currentColor;
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+/* 骨架屏动画 */
+.skeleton {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: skeleton-loading 1.5s ease-in-out infinite;
+    border-radius: 8px;
+}
+
+@keyframes skeleton-loading {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+.skeleton-text {
+    height: 16px;
+    margin-bottom: 8px;
+}
+
+.skeleton-title {
+    height: 24px;
+    width: 60%;
+    margin-bottom: 12px;
+}
+
+/* ========================================
+   空状态提示
+======================================== */
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+}
+
+.empty-state-icon {
+    font-size: 64px;
+    margin-bottom: 20px;
+    opacity: 0.5;
+}
+
+.empty-state-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: #1d1d1f;
+    margin-bottom: 8px;
+}
+
+.empty-state-desc {
+    font-size: 14px;
+    color: #86868b;
+    margin-bottom: 24px;
+}
+
+.empty-state-action {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 24px;
+    background: #FF6600;
+    color: #ffffff;
+    border: none;
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.empty-state-action:hover {
+    background: #e65c00;
+    transform: translateY(-2px);
+}
+
+/* 表格空状态 */
+table tbody tr.empty-row {
+    background: transparent !important;
+}
+
+table tbody tr.empty-row td {
+    border: none;
+    padding: 40px 20px;
+}
+
+/* 加载占位符 */
+.skeleton-row {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 20px;
+}
+
+.skeleton-row .skeleton {
+    height: 20px;
+}
+
+.skeleton-row .skeleton:first-child {
+    width: 30%;
+}
+
+.skeleton-row .skeleton:nth-child(2) {
+    width: 60%;
 }
