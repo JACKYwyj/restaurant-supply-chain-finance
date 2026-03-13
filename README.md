@@ -203,7 +203,7 @@ MIT License - 详见 [LICENSE](LICENSE)
 
 **Jacky Wang**
 - GitHub: https://github.com/JACKYwyj
-- Email: jacky@example.com
+- Email: 1230009401@student.must.edu.mo
 
 ---
 
