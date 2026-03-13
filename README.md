@@ -174,7 +174,9 @@ python app.py
 - 数据来源：Bloomberg 宏观数据 + 模拟商户数据
 - 时间跨度：2017-2024
 
-详见: [RTV模型设计文档](backend/rtv_model/RTV_model_design_v2.docx)
+详见: 
+- [RTV模型设计文档(在线预览)](backend/rtv_model/RTV_model_design_v2.md)
+- [RTV模型设计文档(下载docx)](backend/rtv_model/RTV_model_design_v2.docx)
 
 ---
 
