@@ -211,4 +211,4 @@ $$\text{Anomaly}_{it} = \frac{FlowScore_{it}}{TrafficScore_{it}}$$
 
 *文档版本: v2.0*  
 *更新时间: 2026-03-12*  
-*作者: RTV Research Team*
+*作者: Jacky Wang*
