@@ -1,57 +1,56 @@
 /**
- * 客流分析 - TensorFlow.js 实时人体检测
- * 使用 COCO-SSD 模型进行人体检测和客流统计
+ * 客流分析 - TensorFlow.js 实时人体检测 + 个体追踪
+ * 使用 IoU (Intersection over Union) 实现跨帧人员追踪
  */
 
 let tfReady = false;
 let cocoModel = null;
 let isDetecting = false;
-let detectionHistory = [];  // 客流变化历史记录
-let lastPeopleCount = 0;
-let enterCount = 0;
-let exitCount = 0;
-let shopCount = 0;
+let detectionHistory = [];
 
-// 进出方向检测配置
-const REGION_OF_INTEREST = {
-    top: 0.3,      // 画面上方30%区域 - 进入检测线
-    bottom: 0.7,   // 画面下方70%区域 - 离开检测线
-    left: 0.1,
-    right: 0.9
+// 追踪配置
+const TRACKER_CONFIG = {
+    maxDisappeared: 15,       // 最多丢失15帧才删除轨迹
+    maxDistance: 150,         // 最大移动距离阈值(pixel)
+    iouThreshold: 0.3,        // IoU匹配阈值
+    bufferSize: 3             // 稳定检测缓冲帧数
 };
 
-// 稳定检测阈值（避免误检）
-const STABILITY_THRESHOLD = 3;  // 连续3帧检测到才确认
-let detectionBuffer = [];  // 缓存最近检测结果
-const BUFFER_SIZE = 5;
+// 追踪器状态
+let nextPersonId = 1;                          // 下一个分配的人员ID
+let peopleTracker = new Map();                  // personId -> { bbox, center, disappeared, inStore, counted, stableCount }
+let activePeopleInStore = 0;                    // 当前在店人数
+let totalEntered = 0;                           // 今日累计进店
+let totalExited = 0;                            // 今日累计离店
+let lastFrameTime = 0;                          // 上一帧时间
 
-// 初始化 TensorFlow.js 和 COCO-SSD 模型
+// 画面分区（用于判断进出）
+const ZONES = {
+    TOP_LINE: 0.25,     // 上区进入线
+    BOTTOM_LINE: 0.75   // 下区离开线
+};
+
+// 初始化
 async function initDetectionModel() {
     if (cocoModel) return true;
     
     try {
         showToast('🤖 正在加载 AI 模型...', 'info');
         
-        // 动态加载 TensorFlow.js
         if (!window.tf) {
             await loadScript('https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.10.0/dist/tf.min.js');
         }
-        
-        // 加载 COCO-SSD 模型
         if (!window.cocoSsd) {
             await loadScript('https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@2.2.2/dist/coco-ssd.min.js');
         }
         
         await window.tf.ready();
-        cocoModel = await window.cocoSsd.load({
-            base: 'lite_mobilenet_v2'  // 使用轻量级模型，更快
-        });
+        cocoModel = await window.cocoSsd.load({ base: 'lite_mobilenet_v2' });
         
         tfReady = true;
         console.log('✅ AI 模型加载完成');
         showToast('✅ AI 模型加载完成', 'success');
         return true;
-        
     } catch (err) {
         console.error('模型加载失败:', err);
         showToast('❌ AI 模型加载失败: ' + err.message, 'error');
@@ -59,13 +58,9 @@ async function initDetectionModel() {
     }
 }
 
-// 动态加载脚本
 function loadScript(src) {
     return new Promise((resolve, reject) => {
-        if (document.querySelector(`script[src="${src}"]`)) {
-            resolve();
-            return;
-        }
+        if (document.querySelector(`script[src="${src}"]`)) { resolve(); return; }
         const script = document.createElement('script');
         script.src = src;
         script.onload = resolve;
@@ -74,11 +69,312 @@ function loadScript(src) {
     });
 }
 
-// 启动实时客流检测
+// ==================== 核心追踪逻辑 ====================
+
+/**
+ * 计算两个 bbox 之间的 IoU
+ */
+function computeIoU(bbox1, bbox2) {
+    const [x1, y1, w1, h1] = bbox1;
+    const [x2, y2, w2, h2] = bbox2;
+    
+    const xi1 = Math.max(x1, x2);
+    const yi1 = Math.max(y1, y2);
+    const xi2 = Math.min(x1 + w1, x2 + w2);
+    const yi2 = Math.min(y1 + h1, y2 + h2);
+    
+    const interArea = Math.max(0, xi2 - xi1) * Math.max(0, yi2 - yi1);
+    const bbox1Area = w1 * h1;
+    const bbox2Area = w2 * h2;
+    const unionArea = bbox1Area + bbox2Area - interArea;
+    
+    return unionArea > 0 ? interArea / unionArea : 0;
+}
+
+/**
+ * 计算两个中心点之间的欧几里得距离
+ */
+function computeDistance(center1, center2) {
+    const dx = center1.x - center2.x;
+    const dy = center1.y - center2.y;
+    return Math.sqrt(dx * dx + dy * dy);
+}
+
+/**
+ * 获取 bbox 中心点
+ */
+function getBboxCenter(bbox) {
+    const [x, y, w, h] = bbox;
+    return { x: x + w / 2, y: y + h / 2 };
+}
+
+/**
+ * 判断人员位置区域
+ * 返回: 'top'(进入区) | 'middle'(在店区) | 'bottom'(离开区)
+ */
+function getZone(centerY, frameHeight) {
+    const ratio = centerY / frameHeight;
+    if (ratio < ZONES.TOP_LINE) return 'top';
+    if (ratio > ZONES.BOTTOM_LINE) return 'bottom';
+    return 'middle';
+}
+
+/**
+ * 注册新人员到追踪器
+ */
+function registerPerson(detection) {
+    const bbox = detection.bbox;
+    const center = getBboxCenter(bbox);
+    const frameHeight = document.getElementById('cameraVideo').videoHeight || 480;
+    const zone = getZone(center.y, frameHeight);
+    
+    const person = {
+        id: nextPersonId++,
+        bbox: [...bbox],
+        center: { ...center },
+        disappeared: 0,
+        inStore: zone === 'middle' || zone === 'bottom',  // 如果在中间或下方区域则认为已在店
+        counted: { enter: false, exit: false },
+        zone: zone,
+        firstSeen: Date.now(),
+        lastSeen: Date.now()
+    };
+    
+    peopleTracker.set(person.id, person);
+    console.log(`[Tracker] 新增人员 #${person.id}, 位置: ${zone}, bbox: [${bbox.join(', ')}]`);
+    
+    return person;
+}
+
+/**
+ * 更新追踪器中已有人员的状态
+ */
+function updatePerson(existingPerson, detection, frameHeight) {
+    const newBbox = detection.bbox;
+    const newCenter = getBboxCenter(newBbox);
+    const oldCenter = existingPerson.center;
+    const oldZone = existingPerson.zone;
+    const newZone = getZone(newCenter.y, frameHeight);
+    
+    // 计算移动距离
+    const moveDistance = computeDistance(oldCenter, newCenter);
+    
+    // 更新位置
+    existingPerson.bbox = [...newBbox];
+    existingPerson.center = { ...newCenter };
+    existingPerson.zone = newZone;
+    existingPerson.disappeared = 0;
+    existingPerson.lastSeen = Date.now();
+    
+    // 判断进出逻辑（只计算一次）
+    if (!existingPerson.counted.enter) {
+        // 从顶部区域进入中间区域 = 进店
+        if (oldZone === 'top' && newZone === 'middle') {
+            totalEntered++;
+            activePeopleInStore++;
+            existingPerson.counted.enter = true;
+            existingPerson.inStore = true;
+            console.log(`[Tracker] #${existingPerson.id} 进店! 累计进店: ${totalEntered}, 当前在店: ${activePeopleInStore}`);
+        }
+        // 从顶部直接跳到下方（快速通过）
+        else if (oldZone === 'top' && newZone === 'bottom') {
+            totalEntered++;
+            activePeopleInStore++;
+            existingPerson.counted.enter = true;
+            existingPerson.inStore = true;
+            console.log(`[Tracker] #${existingPerson.id} 进店(快速通过)! 累计进店: ${totalEntered}`);
+        }
+    }
+    
+    if (!existingPerson.counted.exit && existingPerson.inStore) {
+        // 从中间或下方区域离开画面 = 离店
+        if (oldZone !== 'bottom' && newZone === 'bottom') {
+            totalExited++;
+            activePeopleInStore = Math.max(0, activePeopleInStore - 1);
+            existingPerson.counted.exit = true;
+            existingPerson.inStore = false;
+            console.log(`[Tracker] #${existingPerson.id} 离店! 累计离店: ${totalExited}, 当前在店: ${activePeopleInStore}`);
+        }
+    }
+}
+
+/**
+ * 匹配检测结果到追踪器 - 使用 IoU + 距离混合匹配
+ */
+function matchDetectionsToTracker(detections, frameHeight) {
+    const matchedIds = new Set();
+    const unmatchedDetections = [];
+    
+    // 第一步：IoU 匹配（高精度匹配）
+    for (const detection of detections) {
+        let bestMatch = null;
+        let bestScore = 0;
+        
+        for (const [personId, person] of peopleTracker) {
+            if (matchedIds.has(personId)) continue;
+            
+            const iou = computeIoU(detection.bbox, person.bbox);
+            const distance = computeDistance(getBboxCenter(detection.bbox), person.center);
+            
+            // 综合评分：IoU * 0.6 + (1 - 距离/最大距离) * 0.4
+            const normalizedDist = Math.min(distance / TRACKER_CONFIG.maxDistance, 1);
+            const score = iou * 0.6 + (1 - normalizedDist) * 0.4;
+            
+            if (score > TRACKER_CONFIG.iouThreshold && score > bestScore) {
+                bestScore = score;
+                bestMatch = personId;
+            }
+        }
+        
+        if (bestMatch !== null) {
+            matchedIds.add(bestMatch);
+            updatePerson(peopleTracker.get(bestMatch), detection, frameHeight);
+        } else {
+            unmatchedDetections.push(detection);
+        }
+    }
+    
+    // 第二步：对未匹配的检测，尝试距离匹配
+    for (const detection of unmatchedDetections) {
+        const detCenter = getBboxCenter(detection.bbox);
+        let bestMatch = null;
+        let bestScore = Infinity;
+        
+        for (const [personId, person] of peopleTracker) {
+            if (matchedIds.has(personId)) continue;
+            
+            const distance = computeDistance(detCenter, person.center);
+            if (distance < TRACKER_CONFIG.maxDistance && distance < bestScore) {
+                bestScore = distance;
+                bestMatch = personId;
+            }
+        }
+        
+        if (bestMatch !== null) {
+            matchedIds.add(bestMatch);
+            updatePerson(peopleTracker.get(bestMatch), detection, frameHeight);
+        } else {
+            // 第三步：注册为新人员
+            registerPerson(detection);
+        }
+    }
+    
+    // 增加未匹配人员的 disappeared 计数
+    for (const [personId, person] of peopleTracker) {
+        if (!matchedIds.has(personId)) {
+            person.disappeared++;
+            
+            // 如果在画面外太久且已计数的，标记为离开
+            if (person.disappeared > TRACKER_CONFIG.maxDisappeared) {
+                if (person.inStore && !person.counted.exit) {
+                    totalExited++;
+                    activePeopleInStore = Math.max(0, activePeopleInStore - 1);
+                    console.log(`[Tracker] #${personId} 失踪标记离店, 累计离店: ${totalExited}`);
+                }
+                peopleTracker.delete(personId);
+                console.log(`[Tracker] 删除轨迹 #${personId}`);
+            }
+        }
+    }
+}
+
+/**
+ * 清理长时间未匹配的人员（防止漂移）
+ */
+function cleanupOldTracks() {
+    const now = Date.now();
+    for (const [personId, person] of peopleTracker) {
+        // 如果5分钟内没有更新，删除
+        if (now - person.lastSeen > 5 * 60 * 1000) {
+            if (person.inStore && !person.counted.exit) {
+                totalExited++;
+                activePeopleInStore = Math.max(0, activePeopleInStore - 1);
+            }
+            peopleTracker.delete(personId);
+            console.log(`[Tracker] 清理超时轨迹 #${personId}`);
+        }
+    }
+}
+
+// ==================== 检测循环 ====================
+
+let videoStream = null;
+let detectionCanvas = null;
+let detectionCtx = null;
+let historyInterval = null;
+
+async function startCamera() {
+    const video = document.getElementById('cameraVideo');
+    const overlay = document.getElementById('videoOverlay');
+    const statsOverlay = document.getElementById('statsOverlay');
+    
+    try {
+        videoStream = await navigator.mediaDevices.getUserMedia({ 
+            video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } } 
+        });
+        
+        video.srcObject = videoStream;
+        overlay.style.display = 'none';
+        statsOverlay.style.display = 'flex';
+        
+        showToast('📷 摄像头已开启', 'success');
+    } catch (err) {
+        console.error('摄像头访问失败:', err);
+        if (err.name === 'NotAllowedError') {
+            showToast('❌ 请允许浏览器访问摄像头权限', 'error');
+        } else if (err.name === 'NotFoundError') {
+            showToast('❌ 未找到可用摄像头设备', 'error');
+        } else {
+            showToast('❌ 摄像头访问失败: ' + err.message, 'error');
+        }
+    }
+}
+
+function stopCamera() {
+    const video = document.getElementById('cameraVideo');
+    const overlay = document.getElementById('videoOverlay');
+    const statsOverlay = document.getElementById('statsOverlay');
+    
+    stopDetection();
+    
+    if (videoStream) {
+        videoStream.getTracks().forEach(track => track.stop());
+        videoStream = null;
+    }
+    
+    video.srcObject = null;
+    overlay.style.display = 'flex';
+    statsOverlay.style.display = 'none';
+    
+    showToast('⏹ 摄像头已关闭', 'info');
+}
+
+async function toggleDetection() {
+    const video = document.getElementById('cameraVideo');
+
+    if (!videoStream) {
+        showToast('❌ 请先开启摄像头', 'error');
+        return;
+    }
+
+    if (window.PeopleDetector && window.PeopleDetector.isRunning && window.PeopleDetector.isRunning()) {
+        window.PeopleDetector.stop();
+        showToast('🤖 AI客流分析已停止', 'info');
+        return;
+    }
+
+    showToast('🤖 正在启动 AI 客流分析...', 'info');
+
+    (async () => {
+        await window.PeopleDetector.init();
+        window.PeopleDetector.start();
+    })();
+}
+
 async function startRealDetection() {
     const video = document.getElementById('cameraVideo');
-    const canvas = document.getElementById('detectionCanvas');
-    const ctx = canvas ? canvas.getContext('2d') : null;
+    detectionCanvas = document.getElementById('detectionCanvas');
+    detectionCtx = detectionCanvas ? detectionCanvas.getContext('2d') : null;
     
     if (!cocoModel) {
         const loaded = await initDetectionModel();
@@ -88,232 +384,205 @@ async function startRealDetection() {
     if (isDetecting) return;
     isDetecting = true;
     
-    // 设置画布尺寸
-    if (canvas) {
-        canvas.width = video.videoWidth || 640;
-        canvas.height = video.videoHeight || 480;
+    // 初始化画布
+    if (detectionCanvas) {
+        detectionCanvas.width = video.videoWidth || 640;
+        detectionCanvas.height = video.videoHeight || 480;
     }
     
-    // 每次检测后记录历史
-    let historyInterval = setInterval(() => {
-        if (shopCount > 0 || detectionHistory.length > 0) {
-            recordCustomerFlow();
-        }
-    }, 5000);  // 每5秒记录一次客流状态
+    // 启动历史记录
+    historyInterval = setInterval(() => {
+        recordCustomerFlow();
+        cleanupOldTracks(); // 定期清理旧轨迹
+    }, 5000);
     
-    // 检测循环
-    async function detectFrame() {
-        if (!isDetecting) return;
-        
-        try {
-            // 确保视频已加载
-            if (video.readyState < 2) {
-                requestAnimationFrame(detectFrame);
-                return;
-            }
-            
-            // 执行检测
-            const predictions = await cocoModel.detect(video);
-            
-            // 筛选人体检测结果
-            const people = predictions.filter(p => p.class === 'person');
-            const currentCount = people.length;
-            
-            // 稳定检测：使用缓冲区平滑结果
-            detectionBuffer.push(currentCount);
-            if (detectionBuffer.length > BUFFER_SIZE) {
-                detectionBuffer.shift();
-            }
-            const stableCount = Math.round(
-                detectionBuffer.reduce((a, b) => a + b, 0) / detectionBuffer.length
-            );
-            
-            // 检测客流变化
-            detectCustomerFlow(stableCount);
-            
-            // 绘制检测结果
-            if (ctx && canvas) {
-                drawDetections(ctx, people, canvas.width, canvas.height);
-            }
-            
-            // 更新显示
-            updateStats();
-            
-        } catch (err) {
-            console.error('检测出错:', err);
-        }
-        
-        // 继续检测循环
-        if (isDetecting) {
+    // 启动检测循环
+    requestAnimationFrame(detectFrame);
+    
+    showToast('🤖 AI 客流分析已开启（个体追踪模式）', 'success');
+}
+
+async function detectFrame() {
+    if (!isDetecting) return;
+    
+    const video = document.getElementById('cameraVideo');
+    
+    try {
+        if (video.readyState < 2) {
             requestAnimationFrame(detectFrame);
+            return;
         }
+        
+        const frameHeight = video.videoHeight || 480;
+        
+        // 执行检测
+        const predictions = await cocoModel.detect(video);
+        const people = predictions.filter(p => p.class === 'person');
+        
+        // 匹配到追踪器
+        matchDetectionsToTracker(people, frameHeight);
+        
+        // 绘制检测结果
+        if (detectionCtx && detectionCanvas) {
+            drawDetections(detectionCtx, people, detectionCanvas.width, frameHeight);
+        }
+        
+        // 更新显示
+        updateStats();
+        
+    } catch (err) {
+        console.error('检测出错:', err);
     }
     
-    // 保存 interval ID 供停止时清理
-    window._detectionHistoryInterval = historyInterval;
-    
-    detectFrame();
-    showToast('🤖 AI 客流分析已开启（真人识别模式）', 'success');
-}
-
-// 检测客流变化（进入/离开）
-function detectCustomerFlow(currentCount) {
-    if (lastPeopleCount === 0 && currentCount > 0) {
-        // 首次检测到人
-        shopCount = currentCount;
-    } else if (currentCount > lastPeopleCount) {
-        // 人数增加 = 有人进入
-        const diff = currentCount - lastPeopleCount;
-        for (let i = 0; i < diff; i++) {
-            enterCount++;
-            shopCount++;
-        }
-    } else if (currentCount < lastPeopleCount && shopCount > 0) {
-        // 人数减少 = 有人离开
-        const diff = lastPeopleCount - currentCount;
-        for (let i = 0; i < diff && shopCount > 0; i++) {
-            exitCount++;
-            shopCount--;
-        }
+    if (isDetecting) {
+        requestAnimationFrame(detectFrame);
     }
-    
-    lastPeopleCount = currentCount;
 }
 
-// 在画面上绘制检测框
 function drawDetections(ctx, predictions, width, height) {
-    // 清空画布
     ctx.clearRect(0, 0, width, height);
     
-    predictions.forEach(pred => {
-        const [x, y, w, h] = pred.bbox;
-        
-        // 根据是否在店绘制不同颜色
-        const color = '#34C759';  // 绿色 - 在店顾客
-        
-        // 绘制边框
-        ctx.strokeStyle = color;
-        ctx.lineWidth = 2;
-        ctx.strokeRect(x, y, w, h);
-        
-        // 绘制背景标签
-        ctx.fillStyle = color;
-        ctx.fillRect(x, y - 25, 60, 25);
-        
-        // 绘制标签文字
-        ctx.fillStyle = '#fff';
-        ctx.font = 'bold 14px Arial';
-        ctx.fillText('顾客', x + 5, y - 7);
-    });
-    
-    // 绘制检测区域辅助线
+    // 绘制区域辅助线
     ctx.setLineDash([5, 5]);
     ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
     ctx.lineWidth = 1;
     
-    const topY = height * REGION_OF_INTEREST.top;
-    const bottomY = height * REGION_OF_INTEREST.bottom;
+    const topY = height * ZONES.TOP_LINE;
+    const bottomY = height * ZONES.BOTTOM_LINE;
     
     ctx.beginPath();
     ctx.moveTo(0, topY);
     ctx.lineTo(width, topY);
     ctx.stroke();
+    ctx.fillText('进入检测线', 5, topY - 5);
     
     ctx.beginPath();
     ctx.moveTo(0, bottomY);
     ctx.lineTo(width, bottomY);
     ctx.stroke();
+    ctx.fillText('离开检测线', 5, bottomY - 5);
     
     ctx.setLineDash([]);
     
-    // 在画面左上角显示当前人数
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-    ctx.fillRect(10, 10, 100, 40);
+    // 绘制每个追踪的人员
+    for (const [personId, person] of peopleTracker) {
+        const [x, y, w, h] = person.bbox;
+        
+        // 根据状态选择颜色
+        let color = '#34C759'; // 绿色 - 在店
+        if (!person.inStore) {
+            color = '#FF9500';  // 橙色 - 已离店待删除
+        }
+        if (person.counted.enter && !person.counted.exit) {
+            color = '#007AFF';  // 蓝色 - 刚进店
+        }
+        
+        // 绘制边框
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 3;
+        ctx.strokeRect(x, y, w, h);
+        
+        // 绘制背景标签
+        ctx.fillStyle = color;
+        ctx.fillRect(x, y - 30, 80, 28);
+        
+        // 绘制标签文字
+        ctx.fillStyle = '#fff';
+        ctx.font = 'bold 14px Arial';
+        ctx.fillText(`#${personId}`, x + 5, y - 10);
+    }
+    
+    // 左上角显示统计
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+    ctx.fillRect(10, 10, 160, 80);
     ctx.fillStyle = '#fff';
-    ctx.font = 'bold 16px Arial';
-    ctx.fillText('当前: ' + predictions.length + '人', 20, 35);
+    ctx.font = 'bold 14px Arial';
+    ctx.fillText(`追踪中: ${peopleTracker.size}人`, 20, 32);
+    ctx.fillText(`在店: ${activePeopleInStore}人`, 20, 52);
+    ctx.fillText(`累计进: ${totalEntered} 出: ${totalExited}`, 20, 72);
 }
 
-// 记录客流变化到历史
+function updateStats() {
+    document.getElementById('enterCount').textContent = totalEntered;
+    document.getElementById('shopCount').textContent = activePeopleInStore;
+    document.getElementById('exitCount').textContent = totalExited;
+}
+
+function stopDetection() {
+    isDetecting = false;
+    
+    if (historyInterval) {
+        clearInterval(historyInterval);
+        historyInterval = null;
+    }
+    
+    if (detectionCtx && detectionCanvas) {
+        detectionCtx.clearRect(0, 0, detectionCanvas.width, detectionCanvas.height);
+    }
+    
+    // 重置追踪器
+    peopleTracker.clear();
+    nextPersonId = 1;
+}
+
+// ==================== 历史记录 ====================
+
 function recordCustomerFlow() {
     const now = new Date();
     const record = {
         time: now.toISOString(),
         timeStr: now.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' }),
-        inShop: shopCount,
-        enterToday: enterCount,
-        exitToday: exitCount
+        inShop: activePeopleInStore,
+        enterToday: totalEntered,
+        exitToday: totalExited
     };
     
     detectionHistory.push(record);
-    
-    // 只保留最近 288 条记录（每5秒一次，可存24小时）
     if (detectionHistory.length > 288) {
         detectionHistory.shift();
     }
     
-    // 保存到 localStorage
     try {
         localStorage.setItem('customerFlowHistory', JSON.stringify(detectionHistory));
     } catch (e) {
         console.warn('localStorage 存储已满');
     }
-    
-    // 更新客流趋势图
-    updateCustomerFlowChart();
 }
 
-// 更新客流趋势图
-function updateCustomerFlowChart() {
-    const chartContainer = document.getElementById('customerFlowChart');
-    if (!chartContainer || detectionHistory.length < 2) return;
-    
-    // 简化版：用文字显示最近记录
-    const recent = detectionHistory.slice(-10);
-    const labels = recent.map(r => r.timeStr);
-    const values = recent.map(r => r.inShop);
-    
-    // 更新统计卡片
-    document.getElementById('enterCount').textContent = enterCount;
-    document.getElementById('shopCount').textContent = shopCount;
-    document.getElementById('exitCount').textContent = exitCount;
-}
-
-// 停止检测
-function stopDetection() {
-    isDetecting = false;
-    
-    if (window._detectionHistoryInterval) {
-        clearInterval(window._detectionHistoryInterval);
-        window._detectionHistoryInterval = null;
-    }
-    
-    // 清空画布
-    const canvas = document.getElementById('detectionCanvas');
-    if (canvas) {
-        const ctx = canvas.getContext('2d');
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
+function restoreCustomerFlowData() {
+    try {
+        const saved = localStorage.getItem('customerFlowHistory');
+        if (saved) {
+            detectionHistory = JSON.parse(saved);
+        }
+        
+        const today = new Date().toDateString();
+        const todayRecords = detectionHistory.filter(r => 
+            new Date(r.time).toDateString() === today
+        );
+        
+        if (todayRecords.length > 0) {
+            const last = todayRecords[todayRecords.length - 1];
+            totalEntered = last.enterToday || 0;
+            totalExited = last.exitToday || 0;
+            activePeopleInStore = last.inShop || 0;
+        }
+    } catch (e) {
+        console.warn('恢复客流数据失败:', e);
     }
 }
 
-// 重置统计数据
 function resetCustomerStats() {
-    enterCount = 0;
-    exitCount = 0;
-    shopCount = 0;
-    lastPeopleCount = 0;
+    peopleTracker.clear();
+    nextPersonId = 1;
+    activePeopleInStore = 0;
+    totalEntered = 0;
+    totalExited = 0;
     detectionHistory = [];
-    detectionBuffer = [];
     localStorage.removeItem('customerFlowHistory');
     updateStats();
 }
 
-// 获取客流历史数据
-function getCustomerFlowHistory() {
-    return detectionHistory;
-}
-
-// 导出客流数据
 function exportCustomerFlowData() {
     if (detectionHistory.length === 0) {
         showToast('暂无客流数据', 'warning');
@@ -322,11 +591,7 @@ function exportCustomerFlowData() {
     
     const data = {
         exportTime: new Date().toISOString(),
-        total: {
-            enter: enterCount,
-            exit: exitCount,
-            current: shopCount
-        },
+        total: { enter: totalEntered, exit: totalExited, current: activePeopleInStore },
         history: detectionHistory
     };
     
@@ -334,48 +599,23 @@ function exportCustomerFlowData() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `客流数据_${new Date().toFormatString('YYYY-MM-DD')}.json`;
+    a.download = `客流数据_${new Date().toISOString().split('T')[0]}.json`;
     a.click();
     URL.revokeObjectURL(url);
     
     showToast('📥 客流数据已导出', 'success');
 }
 
-// 从 localStorage 恢复数据
-function restoreCustomerFlowData() {
-    try {
-        const saved = localStorage.getItem('customerFlowHistory');
-        if (saved) {
-            detectionHistory = JSON.parse(saved);
-        }
-        
-        // 从今日第一条恢复计数
-        const today = new Date().toDateString();
-        const todayRecords = detectionHistory.filter(r => 
-            new Date(r.time).toDateString() === today
-        );
-        
-        if (todayRecords.length > 0) {
-            const last = todayRecords[todayRecords.length - 1];
-            enterCount = last.enterToday;
-            exitCount = last.exitToday;
-            shopCount = last.inShop;
-        }
-    } catch (e) {
-        console.warn('恢复客流数据失败:', e);
-    }
-}
+// ==================== 全局导出 ====================
 
-// 页面加载时恢复数据
-document.addEventListener('DOMContentLoaded', restoreCustomerFlowData);
-
-// 全局导出函数
 window.PeopleDetector = {
     init: initDetectionModel,
     start: startRealDetection,
     stop: stopDetection,
     reset: resetCustomerStats,
-    getHistory: getCustomerFlowHistory,
     export: exportCustomerFlowData,
     isRunning: () => isDetecting
 };
+
+// 页面加载时恢复数据
+document.addEventListener('DOMContentLoaded', restoreCustomerFlowData);
