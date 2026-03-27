@@ -44,7 +44,7 @@ function loadScript(src) {
 // 初始化
 async function initDetectionModel() {
     try {
-        showToast('🤖 正在加载 AI 模型...', 'info');
+        showToast('info', 'AI模型', '正在加载 AI 模型...');
         
         // TensorFlow.js 核心
         if (!window.tf) {
@@ -66,12 +66,12 @@ async function initDetectionModel() {
         }
         
         tfReady = true;
-        showToast('✅ AI 模型加载完成', 'success');
+        showToast('success', 'AI模型', 'AI 模型加载完成');
         return true;
         
     } catch (err) {
         console.error('❌ 模型加载失败:', err);
-        showToast('❌ AI 模型加载失败: ' + err.message, 'error');
+        showToast('error', 'AI模型', 'AI 模型加载失败: ' + err.message);
         return false;
     }
 }
@@ -253,10 +253,10 @@ async function startCamera() {
         overlay.style.display = 'none';
         statsOverlay.style.display = 'flex';
         
-        showToast('📷 摄像头已开启', 'success');
+        showToast('success', '摄像头', '摄像头已开启');
     } catch (err) {
         console.error('摄像头失败:', err);
-        showToast('❌ 摄像头访问失败', 'error');
+        showToast('error', '摄像头', '摄像头访问失败');
     }
 }
 
@@ -276,22 +276,22 @@ function stopCamera() {
     overlay.style.display = 'flex';
     statsOverlay.style.display = 'none';
     
-    showToast('⏹ 摄像头已关闭', 'info');
+    showToast('info', '摄像头', '摄像头已关闭');
 }
 
 async function toggleDetection() {
     if (!videoStream) {
-        showToast('❌ 请先开启摄像头', 'error');
+        showToast('error', '摄像头', '请先开启摄像头');
         return;
     }
 
     if (isDetecting) {
         stopDetection();
-        showToast('🤖 AI客流分析已停止', 'info');
+        showToast('info', 'AI客流', 'AI客流分析已停止');
         return;
     }
 
-    showToast('🤖 正在启动 AI 客流分析...', 'info');
+    showToast('info', 'AI客流', '正在启动 AI 客流分析...');
 
     const ok = await initDetectionModel();
     if (ok) startRealDetection();
@@ -314,7 +314,7 @@ function startRealDetection() {
     
     requestAnimationFrame(detectFrame);
     
-    showToast('🤖 AI 客流分析已开启', 'success');
+    showToast('success', 'AI客流', 'AI 客流分析已开启');
 }
 
 async function detectFrame() {
@@ -453,13 +453,13 @@ function resetStats() {
 }
 
 function exportFlow() {
-    if (detectionHistory.length === 0) { showToast('暂无数据', 'warning'); return; }
+    if (detectionHistory.length === 0) { showToast('warning', '数据导出', '暂无数据'); return; }
     const data = { exportTime: new Date().toISOString(), total: {enter:totalEntered, exit:totalExited, current:activePeopleInStore}, history: detectionHistory };
     const blob = new Blob([JSON.stringify(data,null,2)], {type:'application/json'});
     const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
     a.download = '客流数据_' + new Date().toISOString().split('T')[0] + '.json';
     a.click();
-    showToast('📥 已导出', 'success');
+    showToast('success', '数据导出', '已导出');
 }
 
 window.PeopleDetector = {
