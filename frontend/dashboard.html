@@ -1264,37 +1264,27 @@
 
         function toggleDetection() {
             const video = document.getElementById('cameraVideo');
-            
+
             if (!videoStream) {
                 showToast('❌ 请先开启摄像头', 'error');
                 return;
             }
-            
-            if (detectionInterval) {
+
+            if (window.PeopleDetector && window.PeopleDetector.isRunning && window.PeopleDetector.isRunning()) {
                 // 停止检测
-                clearInterval(detectionInterval);
-                detectionInterval = null;
+                window.PeopleDetector.stop();
                 showToast('🤖 AI客流分析已停止', 'info');
                 return;
             }
-            
-            // 模拟AI客流检测（演示版）
-            // 实际项目中可以连接后端Python服务进行真实检测
-            showToast('🤖 AI客流分析已开启（演示模式）', 'success');
-            
-            detectionInterval = setInterval(() => {
-                // 模拟数据 - 实际项目中这里应该调用后端API
-                const random = Math.random();
-                if (random < 0.1) {
-                    enterCount++;
-                    shopCount++;
-                    updateStats();
-                } else if (random > 0.9 && shopCount > 0) {
-                    exitCount++;
-                    shopCount--;
-                    updateStats();
-                }
-            }, 2000);
+
+            // 启动真实 AI 检测
+            showToast('🤖 正在启动 AI 客流分析...', 'info');
+
+            // 初始化并启动检测
+            (async () => {
+                await window.PeopleDetector.init();
+                window.PeopleDetector.start();
+            })();
         }
 
         function updateStats() {
@@ -1347,37 +1337,5 @@
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.10.0/dist/tf.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@2.2.2/dist/coco-ssd.min.js"></script>
     <script src="js/people-detection.js"></script>
-
-    <script>
-        // 增强版 toggleDetection - 调用真实 AI 检测
-        let _originalToggle = toggleDetection;
-        let realDetectionActive = false;
-
-        async function toggleDetection() {
-            const video = document.getElementById('cameraVideo');
-
-            if (!videoStream) {
-                showToast('❌ 请先开启摄像头', 'error');
-                return;
-            }
-
-            if (realDetectionActive) {
-                // 停止真实检测
-                stopDetection();
-                if (detectionInterval) {
-                    clearInterval(detectionInterval);
-                    detectionInterval = null;
-                }
-                realDetectionActive = false;
-                showToast('🤖 AI客流分析已停止', 'info');
-                return;
-            }
-
-            // 启动真实 AI 检测
-            showToast('🤖 正在启动 AI 客流分析...', 'info');
-            await startRealDetection();
-            realDetectionActive = true;
-        }
-    </script>
 </body>
 </html>

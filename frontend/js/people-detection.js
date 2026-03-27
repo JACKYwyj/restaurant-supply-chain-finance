@@ -376,12 +376,6 @@ window.PeopleDetector = {
     stop: stopDetection,
     reset: resetCustomerStats,
     getHistory: getCustomerFlowHistory,
-    export: exportCustomerFlowData
+    export: exportCustomerFlowData,
+    isRunning: () => isDetecting
 };
-
-// 暴露关键变量到全局（供 dashboard.html 访问）
-// 注意：这些会覆盖 dashboard.html 中的局部变量声明
-window.getEnterCount = () => enterCount;
-window.getExitCount = () => exitCount;
-window.getShopCount = () => shopCount;
-window.getIsDetecting = () => isDetecting;
