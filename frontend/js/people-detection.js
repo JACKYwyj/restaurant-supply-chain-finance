@@ -1,20 +1,20 @@
 /**
  * 客流分析 - TensorFlow.js 实时人体检测 + 个体追踪
- * 双模式：BlazeFace人脸检测 + COCO-SSD人体检测，上半身即可识别
+ * 简化版：使用 coco-ssd人体检测 + BlazeFace人脸检测
  */
 
 let tfReady = false;
 let cocoModel = null;
-let faceModel = null;
+let blazefaceModel = null;
 let isDetecting = false;
 let detectionHistory = [];
 
 // 追踪配置
 const TRACKER_CONFIG = {
     maxDisappeared: 20,
-    maxDistance: 250,
-    iouThreshold: 0.15,
-    confidenceThreshold: 0.25
+    maxDistance: 300,
+    iouThreshold: 0.1,
+    confidenceThreshold: 0.2
 };
 
 // 追踪器状态
@@ -37,109 +37,92 @@ function loadScript(src) {
         const script = document.createElement('script');
         script.src = src;
         script.onload = resolve;
-        script.onerror = () => {
-            console.warn('脚本加载失败:', src);
-            reject(new Error(`Failed to load: ${src}`));
-        };
+        script.onerror = () => reject(new Error('Failed: ' + src));
         document.head.appendChild(script);
     });
 }
 
 // 初始化
 async function initDetectionModel() {
-    if (cocoModel && faceModel) return true;
-    
     try {
         showToast('🤖 正在加载 AI 模型...', 'info');
         
-        // 加载 TensorFlow.js 核心
+        // 加载 TensorFlow.js
         if (!window.tf) {
             await loadScript('https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.10.0/dist/tf.min.js');
         }
         
-        // 加载 BlazeFace (人脸检测 - 快速、侧脸也能检测)
+        // 加载 BlazeFace
         if (!window.blazeface) {
-            await loadScript('https://cdn.jsdelivr.net/npm/@tensorflow-models/blazeface@0.1.0/dist/blazeface.min.js');
+            await loadScript('https://cdn.jsdelivr.net/npm/@tensorflow-models/blazeface@0.1.0/dist/index.js');
         }
         
-        // 加载 COCO-SSD (人体检测 - 补充)
+        // 加载 COCO-SSD
         if (!window.cocoSsd) {
             await loadScript('https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@2.2.2/dist/coco-ssd.min.js');
         }
         
         await window.tf.ready();
         
-        // 初始化人脸检测模型
-        if (!faceModel) {
-            faceModel = await window.blazeface.load({
-                backend: 'tfjs',
-                maxFaces: 10
-            });
-            console.log('✅ BlazeFace 模型加载完成');
+        // 初始化 BlazeFace
+        if (!blazefaceModel) {
+            blazefaceModel = await window.blazeface.load();
+            console.log('✅ BlazeFace 加载完成');
         }
         
-        // 初始化人体检测模型
+        // 初始化 COCO-SSD
         if (!cocoModel) {
             cocoModel = await window.cocoSsd.load({
-                base: 'lite_mobilenet_v2',
-                scoreThreshold: TRACKER_CONFIG.confidenceThreshold
+                base: 'lite_mobilenet_v2'
             });
-            console.log('✅ COCO-SSD 模型加载完成');
+            console.log('✅ COCO-SSD 加载完成');
         }
         
         tfReady = true;
-        showToast('✅ AI 模型加载完成 (人脸+人体双模式)', 'success');
+        showToast('✅ AI 模型加载完成', 'success');
         return true;
         
     } catch (err) {
-        console.error('模型加载失败:', err);
-        showToast('❌ AI 模型加载失败: ' + err.message, 'error');
+        console.error('❌ 模型加载失败:', err);
+        showToast('❌ AI 模型加载失败', 'error');
         return false;
     }
 }
 
 // ==================== 检测 ====================
 
-/**
- * 综合检测：BlazeFace人脸 + COCO人体
- */
 async function detectPeople(video) {
     const results = [];
     
     try {
-        // 1. BlazeFace 人脸检测（主要，对上半身/侧脸友好）
-        if (faceModel) {
-            const faces = await faceModel.estimateFaces(video, false);
+        // 1. BlazeFace 人脸检测
+        if (blazefaceModel) {
+            const faces = await blazefaceModel.estimateFaces(video, false);
             
             for (const face of faces) {
-                // 使用 start/end 关键点确定人脸区域
-                const topLeft = face.topLeft;
-                const bottomRight = face.bottomRight;
-                const faceWidth = bottomRight[0] - topLeft[0];
-                const faceHeight = bottomRight[1] - topLeft[1];
+                const tl = face.topLeft;
+                const br = face.bottomRight;
+                const w = br[0] - tl[0];
+                const h = br[1] - tl[1];
                 
                 // 扩展为上半身区域
-                const expandedBbox = [
-                    topLeft[0] - faceWidth * 0.5,
-                    topLeft[1] - faceHeight * 2.5,
-                    faceWidth * 2,
-                    faceHeight * 4
+                const bbox = [
+                    tl[0] - w * 0.5,      // x
+                    tl[1] - h * 2.0,      // y (向上扩展)
+                    w * 2.0,              // width
+                    h * 4.0               // height (向下扩展到上半身)
                 ];
                 
-                // 检查置信度
-                const prob = face.probability ? face.probability[0] : 0.9;
-                if (prob > 0.5) {
-                    results.push({
-                        class: 'face',
-                        bbox: expandedBbox,
-                        confidence: prob,
-                        type: 'face'
-                    });
-                }
+                results.push({
+                    class: 'face',
+                    bbox: bbox,
+                    confidence: 0.9,
+                    type: 'face'
+                });
             }
         }
         
-        // 2. COCO-SSD 人体检测（补充）
+        // 2. COCO-SSD 人体检测
         if (cocoModel) {
             const bodies = await cocoModel.detect(video);
             
@@ -164,145 +147,131 @@ async function detectPeople(video) {
 
 // ==================== 追踪 ====================
 
-function computeIoU(bbox1, bbox2) {
-    const [x1, y1, w1, h1] = bbox1;
-    const [x2, y2, w2, h2] = bbox2;
+function computeIoU(b1, b2) {
+    const [x1,y1,w1,h1] = b1;
+    const [x2,y2,w2,h2] = b2;
     
-    const xi1 = Math.max(x1, x2);
-    const yi1 = Math.max(y1, y2);
-    const xi2 = Math.min(x1 + w1, x2 + w2);
-    const yi2 = Math.min(y1 + h1, y2 + h2);
-    
-    const interArea = Math.max(0, xi2 - xi1) * Math.max(0, yi2 - yi1);
-    const unionArea = w1 * h1 + w2 * h2 - interArea;
-    
-    return unionArea > 0 ? interArea / unionArea : 0;
+    const xi1 = Math.max(x1,x2), yi1 = Math.max(y1,y2);
+    const xi2 = Math.min(x1+w1,x2+w2), yi2 = Math.min(y1+h1,y2+h2);
+    const inter = Math.max(0,xi2-xi1) * Math.max(0,yi2-yi1);
+    const union = w1*h1 + w2*h2 - inter;
+    return union > 0 ? inter/union : 0;
 }
 
-function computeDistance(center1, center2) {
-    return Math.sqrt(Math.pow(center1.x - center2.x, 2) + Math.pow(center1.y - center2.y, 2));
+function dist(c1, c2) {
+    return Math.sqrt((c1.x-c2.x)**2 + (c1.y-c2.y)**2);
 }
 
-function getBboxCenter(bbox) {
-    return { x: bbox[0] + bbox[2] / 2, y: bbox[1] + bbox[3] / 2 };
+function center(b) {
+    return { x: b[0]+b[2]/2, y: b[1]+b[3]/2 };
 }
 
-function getZone(centerY, frameHeight) {
-    const ratio = centerY / frameHeight;
-    if (ratio < ZONES.TOP_LINE) return 'top';
-    if (ratio > ZONES.BOTTOM_LINE) return 'bottom';
+function zone(cy, fh) {
+    const r = cy / fh;
+    if (r < ZONES.TOP_LINE) return 'top';
+    if (r > ZONES.BOTTOM_LINE) return 'bottom';
     return 'middle';
 }
 
-function registerPerson(detection) {
-    const bbox = detection.bbox;
-    const center = getBboxCenter(bbox);
-    const frameHeight = document.getElementById('cameraVideo').videoHeight || 480;
-    const zone = getZone(center.y, frameHeight);
+function register(det) {
+    const bbox = det.bbox;
+    const c = center(bbox);
+    const fh = document.getElementById('cameraVideo').videoHeight || 480;
+    const z = zone(c.y, fh);
     
-    const person = {
+    const p = {
         id: nextPersonId++,
         bbox: [...bbox],
-        center: { ...center },
+        center: {...c},
         disappeared: 0,
-        inStore: zone === 'middle' || zone === 'bottom',
-        counted: { enter: false, exit: false },
-        zone: zone,
-        type: detection.type,
-        firstSeen: Date.now(),
-        lastSeen: Date.now()
+        inStore: z !== 'top',
+        counted: {enter: false, exit: false},
+        zone: z,
+        type: det.type
     };
     
-    peopleTracker.set(person.id, person);
-    console.log(`[Tracker] 新增 #${person.id} (${detection.type}) 位置: ${zone}`);
-    
-    return person;
+    peopleTracker.set(p.id, p);
+    console.log('[Tracker] 新增 #' + p.id + ' (' + det.type + ') 位置:' + z);
+    return p;
 }
 
-function updatePerson(existingPerson, detection, frameHeight) {
-    const newBbox = detection.bbox;
-    const newCenter = getBboxCenter(newBbox);
-    const oldZone = existingPerson.zone;
-    const newZone = getZone(newCenter.y, frameHeight);
+function updatePerson(p, det, fh) {
+    const nb = det.bbox;
+    const nc = center(nb);
+    const oz = p.zone;
+    const nz = zone(nc.y, fh);
     
-    existingPerson.bbox = [...newBbox];
-    existingPerson.center = { ...newCenter };
-    existingPerson.zone = newZone;
-    existingPerson.disappeared = 0;
-    existingPerson.lastSeen = Date.now();
-    existingPerson.type = detection.type;
+    p.bbox = [...nb];
+    p.center = {...nc};
+    p.zone = nz;
+    p.disappeared = 0;
+    p.type = det.type;
     
-    // 判断进出
-    if (!existingPerson.counted.enter) {
-        if ((oldZone === 'top' && newZone === 'middle') || 
-            (oldZone === 'top' && newZone === 'bottom')) {
+    if (!p.counted.enter) {
+        if ((oz === 'top' && nz === 'middle') || (oz === 'top' && nz === 'bottom')) {
             totalEntered++;
             activePeopleInStore++;
-            existingPerson.counted.enter = true;
-            existingPerson.inStore = true;
-            console.log(`[Tracker] #${existingPerson.id} 进店! 累计: ${totalEntered}`);
+            p.counted.enter = true;
+            p.inStore = true;
+            console.log('[Tracker] #' + p.id + ' 进店! 累计:' + totalEntered);
         }
     }
     
-    if (!existingPerson.counted.exit && existingPerson.inStore) {
-        if (oldZone !== 'bottom' && newZone === 'bottom') {
+    if (!p.counted.exit && p.inStore) {
+        if (oz !== 'bottom' && nz === 'bottom') {
             totalExited++;
             activePeopleInStore = Math.max(0, activePeopleInStore - 1);
-            existingPerson.counted.exit = true;
-            existingPerson.inStore = false;
-            console.log(`[Tracker] #${existingPerson.id} 离店! 累计: ${totalExited}`);
+            p.counted.exit = true;
+            p.inStore = false;
+            console.log('[Tracker] #' + p.id + ' 离店! 累计:' + totalExited);
         }
     }
 }
 
-function matchDetectionsToTracker(detections, frameHeight) {
-    // 为每个检测结果找匹配
-    for (const detection of detections) {
-        const detCenter = getBboxCenter(detection.bbox);
-        let bestMatch = null;
-        let bestScore = Infinity;
+function matchDetections(dets, fh) {
+    const matched = new Set();
+    
+    for (const det of dets) {
+        const dc = center(det.bbox);
+        let best = null, bestScore = Infinity;
         
-        for (const [personId, person] of peopleTracker) {
-            const iou = computeIoU(detection.bbox, person.bbox);
-            const distance = computeDistance(detCenter, person.center);
-            
-            // 优先用IoU匹配，其次用距离
-            if (iou > TRACKER_CONFIG.iouThreshold) {
-                const score = 1 - iou + distance * 0.01;
+        for (const [pid, p] of peopleTracker) {
+            const iou = computeIoU(det.bbox, p.bbox);
+            const d = dist(dc, p.center);
+            if (iou > TRACKER_CONFIG.iouThreshold || d < TRACKER_CONFIG.maxDistance) {
+                const score = d + (1-iou)*100;
                 if (score < bestScore) {
                     bestScore = score;
-                    bestMatch = personId;
+                    best = pid;
                 }
             }
         }
         
-        if (bestMatch !== null) {
-            updatePerson(peopleTracker.get(bestMatch), detection, frameHeight);
+        if (best !== null) {
+            matched.add(best);
+            updatePerson(peopleTracker.get(best), det, fh);
         } else {
-            // 检查是否距离太近（防止重复创建）
-            let tooClose = false;
-            for (const [pid, person] of peopleTracker) {
-                if (computeDistance(detCenter, person.center) < TRACKER_CONFIG.maxDistance * 0.5) {
-                    tooClose = true;
-                    break;
+            // 检查是否太近
+            let close = false;
+            for (const p of peopleTracker.values()) {
+                if (dist(dc, p.center) < TRACKER_CONFIG.maxDistance * 0.3) {
+                    close = true; break;
                 }
             }
-            if (!tooClose) {
-                registerPerson(detection);
-            }
+            if (!close) register(det);
         }
     }
     
-    // 增加未匹配人员的 disappeared
-    for (const [personId, person] of peopleTracker) {
-        person.disappeared++;
-        
-        if (person.disappeared > TRACKER_CONFIG.maxDisappeared) {
-            if (person.inStore && !person.counted.exit) {
-                totalExited++;
-                activePeopleInStore = Math.max(0, activePeopleInStore - 1);
+    for (const [pid, p] of peopleTracker) {
+        if (!matched.has(pid)) {
+            p.disappeared++;
+            if (p.disappeared > TRACKER_CONFIG.maxDisappeared) {
+                if (p.inStore && !p.counted.exit) {
+                    totalExited++;
+                    activePeopleInStore = Math.max(0, activePeopleInStore - 1);
+                }
+                peopleTracker.delete(pid);
             }
-            peopleTracker.delete(personId);
         }
     }
 }
@@ -310,9 +279,9 @@ function matchDetectionsToTracker(detections, frameHeight) {
 // ==================== 检测循环 ====================
 
 let videoStream = null;
-let detectionCanvas = null;
-let detectionCtx = null;
-let historyInterval = null;
+let canvas = null;
+let ctx2d = null;
+let histInterval = null;
 
 async function startCamera() {
     const video = document.getElementById('cameraVideo');
@@ -321,11 +290,7 @@ async function startCamera() {
     
     try {
         videoStream = await navigator.mediaDevices.getUserMedia({ 
-            video: { 
-                facingMode: 'environment', 
-                width: { ideal: 1280 }, 
-                height: { ideal: 720 } 
-            } 
+            video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } } 
         });
         
         video.srcObject = videoStream;
@@ -334,14 +299,8 @@ async function startCamera() {
         
         showToast('📷 摄像头已开启', 'success');
     } catch (err) {
-        console.error('摄像头访问失败:', err);
-        if (err.name === 'NotAllowedError') {
-            showToast('❌ 请允许浏览器访问摄像头权限', 'error');
-        } else if (err.name === 'NotFoundError') {
-            showToast('❌ 未找到可用摄像头设备', 'error');
-        } else {
-            showToast('❌ 摄像头访问失败: ' + err.message, 'error');
-        }
+        console.error('摄像头失败:', err);
+        showToast('❌ 摄像头访问失败: ' + err.message, 'error');
     }
 }
 
@@ -353,7 +312,7 @@ function stopCamera() {
     stopDetection();
     
     if (videoStream) {
-        videoStream.getTracks().forEach(track => track.stop());
+        videoStream.getTracks().forEach(t => t.stop());
         videoStream = null;
     }
     
@@ -365,50 +324,41 @@ function stopCamera() {
 }
 
 async function toggleDetection() {
-    const video = document.getElementById('cameraVideo');
-
     if (!videoStream) {
         showToast('❌ 请先开启摄像头', 'error');
         return;
     }
 
-    if (window.PeopleDetector && window.PeopleDetector.isRunning && window.PeopleDetector.isRunning()) {
-        window.PeopleDetector.stop();
+    if (isDetecting) {
+        stopDetection();
         showToast('🤖 AI客流分析已停止', 'info');
         return;
     }
 
     showToast('🤖 正在启动 AI 客流分析...', 'info');
 
-    (async () => {
-        await window.PeopleDetector.init();
-        window.PeopleDetector.start();
-    })();
+    const ok = await initDetectionModel();
+    if (ok) startRealDetection();
 }
 
-async function startRealDetection() {
+function startRealDetection() {
     const video = document.getElementById('cameraVideo');
-    detectionCanvas = document.getElementById('detectionCanvas');
-    detectionCtx = detectionCanvas ? detectionCanvas.getContext('2d') : null;
-    
-    if (!cocoModel || !faceModel) {
-        const loaded = await initDetectionModel();
-        if (!loaded) return;
-    }
+    canvas = document.getElementById('detectionCanvas');
+    ctx2d = canvas ? canvas.getContext('2d') : null;
     
     if (isDetecting) return;
     isDetecting = true;
     
-    if (detectionCanvas) {
-        detectionCanvas.width = video.videoWidth || 640;
-        detectionCanvas.height = video.videoHeight || 480;
+    if (canvas) {
+        canvas.width = video.videoWidth || 640;
+        canvas.height = video.videoHeight || 480;
     }
     
-    historyInterval = setInterval(recordCustomerFlow, 5000);
+    histInterval = setInterval(recordFlow, 5000);
     
     requestAnimationFrame(detectFrame);
     
-    showToast('🤖 AI 客流分析已开启（人脸+人体双模式）', 'success');
+    showToast('🤖 AI 客流分析已开启', 'success');
 }
 
 async function detectFrame() {
@@ -422,200 +372,152 @@ async function detectFrame() {
             return;
         }
         
-        const frameHeight = video.videoHeight || 480;
-        const predictions = await detectPeople(video);
+        const fh = video.videoHeight || 480;
+        const preds = await detectPeople(video);
         
-        matchDetectionsToTracker(predictions, frameHeight);
+        matchDetections(preds, fh);
         
-        if (detectionCtx && detectionCanvas) {
-            drawDetections(detectionCtx, predictions, detectionCanvas.width, frameHeight);
-        }
+        if (ctx2d && canvas) drawFrame(ctx2d, preds, canvas.width, fh);
         
-        updateStats();
+        document.getElementById('enterCount').textContent = totalEntered;
+        document.getElementById('shopCount').textContent = activePeopleInStore;
+        document.getElementById('exitCount').textContent = totalExited;
         
     } catch (err) {
-        console.error('检测出错:', err);
+        console.error('检测循环错误:', err);
     }
     
-    if (isDetecting) {
-        requestAnimationFrame(detectFrame);
-    }
+    if (isDetecting) requestAnimationFrame(detectFrame);
 }
 
-function drawDetections(ctx, predictions, width, height) {
-    ctx.clearRect(0, 0, width, height);
+function drawFrame(ctx, preds, w, h) {
+    ctx.clearRect(0, 0, w, h);
     
     // 区域线
-    ctx.setLineDash([5, 5]);
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+    ctx.setLineDash([5,5]);
+    ctx.strokeStyle = 'rgba(255,255,255,0.5)';
     ctx.lineWidth = 2;
     
-    const topY = height * ZONES.TOP_LINE;
-    const bottomY = height * ZONES.BOTTOM_LINE;
+    const ty = h * ZONES.TOP_LINE;
+    const by = h * ZONES.BOTTOM_LINE;
     
-    ctx.beginPath();
-    ctx.moveTo(0, topY);
-    ctx.lineTo(width, topY);
-    ctx.stroke();
-    ctx.fillStyle = '#34C759';
-    ctx.font = 'bold 12px Arial';
-    ctx.fillText('进入检测线', 5, topY - 5);
+    ctx.beginPath(); ctx.moveTo(0,ty); ctx.lineTo(w,ty); ctx.stroke();
+    ctx.fillStyle = '#34C759'; ctx.font = 'bold 12px Arial';
+    ctx.fillText('进入线', 5, ty-5);
     
-    ctx.beginPath();
-    ctx.moveTo(0, bottomY);
-    ctx.lineTo(width, bottomY);
-    ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(0,by); ctx.lineTo(w,by); ctx.stroke();
     ctx.fillStyle = '#FF3B30';
-    ctx.fillText('离开检测线', 5, bottomY - 5);
+    ctx.fillText('离开线', 5, by-5);
     
     ctx.setLineDash([]);
     
     // 绘制追踪人员
-    for (const [personId, person] of peopleTracker) {
-        const [x, y, w, h] = person.bbox;
+    for (const [pid, p] of peopleTracker) {
+        const [x,y,w2,h2] = p.bbox;
         
         let color = '#34C759';
-        if (!person.inStore) color = '#FF9500';
-        if (person.counted.enter && !person.counted.exit) color = '#007AFF';
+        if (!p.inStore) color = '#FF9500';
+        if (p.counted.enter && !p.counted.exit) color = '#007AFF';
         
         ctx.strokeStyle = color;
-        ctx.lineWidth = person.type === 'face' ? 3 : 2;
+        ctx.lineWidth = p.type === 'face' ? 3 : 2;
         
-        if (person.type === 'face') {
-            // 人脸：画椭圆
-            const cx = x + w / 2;
-            const cy = y + h * 0.4;
+        if (p.type === 'face') {
+            // 人脸椭圆
+            const cx = x + w2/2, cy = y + h2*0.4;
             ctx.beginPath();
-            ctx.ellipse(cx, cy, w / 2, h * 0.4, 0, 0, Math.PI * 2);
+            ctx.ellipse(cx, cy, w2/2, h2*0.4, 0, 0, Math.PI*2);
             ctx.stroke();
         } else {
-            ctx.strokeRect(x, y, w, h);
+            ctx.strokeRect(x, y, w2, h2);
         }
         
         // 标签
         ctx.fillStyle = color;
-        ctx.fillRect(x, y - 25, 60, 22);
+        ctx.fillRect(x, y-22, 55, 20);
         ctx.fillStyle = '#fff';
         ctx.font = 'bold 11px Arial';
-        const label = person.type === 'face' ? `👤${personId}` : `🚶${personId}`;
-        ctx.fillText(label, x + 3, y - 10);
+        ctx.fillText(p.type === 'face' ? '👤'+pid : '🚶'+pid, x+3, y-8);
     }
     
     // 统计面板
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.85)';
-    ctx.fillRect(10, 10, 170, 85);
+    ctx.fillStyle = 'rgba(0,0,0,0.85)';
+    ctx.fillRect(10,10,160,80);
     ctx.fillStyle = '#fff';
     ctx.font = 'bold 13px Arial';
-    ctx.fillText(`追踪: ${peopleTracker.size}人`, 18, 30);
-    ctx.fillText(`在店: ${activePeopleInStore}人`, 18, 50);
-    ctx.fillText(`进: ${totalEntered}  离: ${totalExited}`, 18, 70);
-    ctx.font = '10px Arial';
-    ctx.fillStyle = '#888';
-    ctx.fillText(`检测源: 人脸+人体`, 18, 88);
-}
-
-function updateStats() {
-    document.getElementById('enterCount').textContent = totalEntered;
-    document.getElementById('shopCount').textContent = activePeopleInStore;
-    document.getElementById('exitCount').textContent = totalExited;
+    ctx.fillText('追踪: ' + peopleTracker.size + '人', 18, 30);
+    ctx.fillText('在店: ' + activePeopleInStore + '人', 18, 50);
+    ctx.fillText('进: ' + totalEntered + ' 离: ' + totalExited, 18, 70);
 }
 
 function stopDetection() {
     isDetecting = false;
-    
-    if (historyInterval) {
-        clearInterval(historyInterval);
-        historyInterval = null;
-    }
-    
-    if (detectionCtx && detectionCanvas) {
-        detectionCtx.clearRect(0, 0, detectionCanvas.width, detectionCanvas.height);
-    }
-    
+    if (histInterval) { clearInterval(histInterval); histInterval = null; }
+    if (ctx2d && canvas) ctx2d.clearRect(0, 0, canvas.width, canvas.height);
     peopleTracker.clear();
     nextPersonId = 1;
 }
 
-function recordCustomerFlow() {
+function recordFlow() {
     const now = new Date();
-    const record = {
+    detectionHistory.push({
         time: now.toISOString(),
-        timeStr: now.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' }),
+        timeStr: now.toLocaleTimeString('zh-CN', {hour:'2-digit',minute:'2-digit'}),
         inShop: activePeopleInStore,
         enterToday: totalEntered,
         exitToday: totalExited
-    };
-    
-    detectionHistory.push(record);
+    });
     if (detectionHistory.length > 288) detectionHistory.shift();
-    
-    try {
-        localStorage.setItem('customerFlowHistory', JSON.stringify(detectionHistory));
-    } catch (e) {}
+    try { localStorage.setItem('cfh', JSON.stringify(detectionHistory)); } catch(e) {}
 }
 
-function restoreCustomerFlowData() {
+function restoreFlow() {
     try {
-        const saved = localStorage.getItem('customerFlowHistory');
-        if (saved) {
-            detectionHistory = JSON.parse(saved);
+        const s = localStorage.getItem('cfh');
+        if (s) {
+            detectionHistory = JSON.parse(s);
+            const today = new Date().toDateString();
+            const todayRecs = detectionHistory.filter(r => new Date(r.time).toDateString() === today);
+            if (todayRecs.length > 0) {
+                const last = todayRecs[todayRecs.length-1];
+                totalEntered = last.enterToday || 0;
+                totalExited = last.exitToday || 0;
+                activePeopleInStore = last.inShop || 0;
+            }
         }
-        
-        const today = new Date().toDateString();
-        const todayRecords = detectionHistory.filter(r => 
-            new Date(r.time).toDateString() === today
-        );
-        
-        if (todayRecords.length > 0) {
-            const last = todayRecords[todayRecords.length - 1];
-            totalEntered = last.enterToday || 0;
-            totalExited = last.exitToday || 0;
-            activePeopleInStore = last.inShop || 0;
-        }
-    } catch (e) {}
+    } catch(e) {}
 }
 
-function resetCustomerStats() {
+function resetStats() {
     peopleTracker.clear();
     nextPersonId = 1;
     activePeopleInStore = 0;
     totalEntered = 0;
     totalExited = 0;
     detectionHistory = [];
-    localStorage.removeItem('customerFlowHistory');
-    updateStats();
+    localStorage.removeItem('cfh');
+    document.getElementById('enterCount').textContent = '0';
+    document.getElementById('shopCount').textContent = '0';
+    document.getElementById('exitCount').textContent = '0';
 }
 
-function exportCustomerFlowData() {
-    if (detectionHistory.length === 0) {
-        showToast('暂无客流数据', 'warning');
-        return;
-    }
-    
-    const data = {
-        exportTime: new Date().toISOString(),
-        total: { enter: totalEntered, exit: totalExited, current: activePeopleInStore },
-        history: detectionHistory
-    };
-    
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `客流数据_${new Date().toISOString().split('T')[0]}.json`;
+function exportFlow() {
+    if (detectionHistory.length === 0) { showToast('暂无数据', 'warning'); return; }
+    const data = { exportTime: new Date().toISOString(), total: {enter:totalEntered, exit:totalExited, current:activePeopleInStore}, history: detectionHistory };
+    const blob = new Blob([JSON.stringify(data,null,2)], {type:'application/json'});
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+    a.download = '客流数据_' + new Date().toISOString().split('T')[0] + '.json';
     a.click();
-    URL.revokeObjectURL(url);
-    
-    showToast('📥 客流数据已导出', 'success');
+    showToast('📥 已导出', 'success');
 }
 
 window.PeopleDetector = {
     init: initDetectionModel,
     start: startRealDetection,
     stop: stopDetection,
-    reset: resetCustomerStats,
-    export: exportCustomerFlowData,
+    reset: resetStats,
+    export: exportFlow,
     isRunning: () => isDetecting
 };
 
-document.addEventListener('DOMContentLoaded', restoreCustomerFlowData);
+document.addEventListener('DOMContentLoaded', restoreFlow);
