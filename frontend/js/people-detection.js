@@ -480,16 +480,22 @@ function initChart() {
         
         // 插入到视频容器下方
         const videoContainer = document.getElementById('videoContainer');
-        videoContainer.parentNode.insertBefore(container, videoContainer.nextSibling);
+        if (videoContainer) {
+            videoContainer.parentNode.insertBefore(container, videoContainer.nextSibling);
+        }
     }
     chartCtx = chartCanvas.getContext('2d');
-    chartCanvas.width = chartCanvas.offsetWidth * 2;
-    chartCanvas.height = 300;
+    // 使用固定尺寸，避免 offsetWidth 为 0 的问题
+    chartCanvas.width = 600;
+    chartCanvas.height = 200;
+    console.log('[图表] 初始化完成');
 }
 
 function updateChart() {
-    if (!chartCanvas || !chartCtx) return;
-    if (detectionHistory.length < 2) return;
+    if (!chartCtx || !chartCanvas) {
+        initChart();
+        if (!chartCtx || !chartCanvas) return;
+    }
     
     const w = chartCanvas.width;
     const h = chartCanvas.height;
@@ -497,9 +503,20 @@ function updateChart() {
     
     ctx.clearRect(0, 0, w, h);
     
-    // 获取最近30条数据
+    // 绘制背景
+    ctx.fillStyle = '#1c1c1e';
+    ctx.fillRect(0, 0, w, h);
+    
+    // 获取数据
     const data = detectionHistory.slice(-30);
-    if (data.length < 2) return;
+    if (data.length === 0) {
+        // 无数据时显示提示
+        ctx.fillStyle = '#888';
+        ctx.font = '24px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText('暂无数据', w / 2, h / 2);
+        return;
+    }
     
     // 找出最大值用于缩放
     const maxVal = Math.max(...data.map(d => d.inShop), 5);
@@ -521,11 +538,11 @@ function updateChart() {
     
     // 绘制在店人数曲线
     ctx.strokeStyle = '#34C759';
-    ctx.lineWidth = 3;
+    ctx.lineWidth = 2;
     ctx.beginPath();
     
     data.forEach((d, i) => {
-        const x = padding + (chartW / (data.length - 1)) * i;
+        const x = padding + (chartW / Math.max(data.length - 1, 1)) * i;
         const y = padding + chartH - (d.inShop / maxVal) * chartH;
         if (i === 0) ctx.moveTo(x, y);
         else ctx.lineTo(x, y);
@@ -535,40 +552,47 @@ function updateChart() {
     // 绘制数据点
     ctx.fillStyle = '#34C759';
     data.forEach((d, i) => {
-        const x = padding + (chartW / (data.length - 1)) * i;
+        const x = padding + (chartW / Math.max(data.length - 1, 1)) * i;
         const y = padding + chartH - (d.inShop / maxVal) * chartH;
         ctx.beginPath();
-        ctx.arc(x, y, 4, 0, Math.PI * 2);
+        ctx.arc(x, y, 3, 0, Math.PI * 2);
         ctx.fill();
     });
     
     // Y轴标签
     ctx.fillStyle = '#888';
-    ctx.font = '20px Arial';
+    ctx.font = '16px Arial';
     ctx.textAlign = 'right';
     for (let i = 0; i <= 4; i++) {
         const val = Math.round(maxVal - (maxVal / 4) * i);
-        const y = padding + (chartH / 4) * i + 6;
-        ctx.fillText(val.toString(), padding - 10, y);
+        const y = padding + (chartH / 4) * i + 5;
+        ctx.fillText(val.toString(), padding - 8, y);
     }
     
     // X轴标签（时间）
     ctx.textAlign = 'center';
+    ctx.font = '14px Arial';
     const step = Math.max(1, Math.floor(data.length / 5));
     data.forEach((d, i) => {
         if (i % step === 0 || i === data.length - 1) {
-            const x = padding + (chartW / (data.length - 1)) * i;
-            ctx.fillText(d.timeStr, x, h - 10);
+            const x = padding + (chartW / Math.max(data.length - 1, 1)) * i;
+            ctx.fillText(d.timeStr, x, h - 8);
         }
     });
     
     // 图例
     ctx.fillStyle = '#34C759';
-    ctx.fillRect(w - 100, 15, 20, 4);
+    ctx.fillRect(w - 90, 12, 15, 3);
     ctx.fillStyle = '#fff';
-    ctx.font = '20px Arial';
+    ctx.font = '14px Arial';
     ctx.textAlign = 'left';
-    ctx.fillText('在店人数', w - 75, 22);
+    ctx.fillText('在店人数', w - 70, 18);
+    
+    // 当前数值
+    const lastData = data[data.length - 1];
+    ctx.fillStyle = '#34C759';
+    ctx.font = 'bold 20px Arial';
+    ctx.fillText('当前: ' + lastData.inShop + '人', padding, 28);
 }
 
 function resetStats() {
@@ -596,8 +620,5 @@ window.PeopleDetector = {
     isRunning: () => isDetecting
 };
 
-// 页面加载时初始化
-document.addEventListener('DOMContentLoaded', () => {
-    // 初始化图表
-    setTimeout(initChart, 500);
-});
+// 页面加载时初始化图表
+document.addEventListener('DOMContentLoaded', initChart);
