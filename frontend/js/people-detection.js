@@ -8,12 +8,12 @@ let cocoModel = null;
 let isDetecting = false;
 let detectionHistory = [];  // 带时间戳的历史记录
 
-// 追踪配置
+// 追踪配置 - 针对高密度场景优化
 const TRACKER_CONFIG = {
-    maxDisappeared: 30,
-    maxDistance: 400,
-    iouThreshold: 0.05,
-    confidenceThreshold: 0.12
+    maxDisappeared: 20,      // 减少丢失容忍，加快清理
+    maxDistance: 500,        // 增大移动距离容忍，适应密集场景
+    iouThreshold: 0.03,      // 降低IoU阈值，更易匹配
+    confidenceThreshold: 0.08 // 大幅降低置信度，检测更多人
 };
 
 // 追踪器状态
@@ -142,7 +142,8 @@ function registerPerson(detection, frameHeight) {
         position: pos,
         disappeared: 0,
         isInStore: (pos === 'middle' || pos === 'bottom'),
-        firstSeen: Date.now()
+        firstSeen: Date.now(),
+        lastMatchScore: 0
     };
     
     peopleTracker.set(person.id, person);
@@ -180,7 +181,7 @@ function updatePerson(person, detection, frameHeight) {
     }
 }
 
-// 匹配检测结果到追踪器
+// 匹配检测结果到追踪器 - 优化高密度场景
 function matchDetections(detections, frameHeight) {
     const matchedPersons = new Set();
     
@@ -194,9 +195,12 @@ function matchDetections(detections, frameHeight) {
             
             const iou = computeIoU(det.bbox, person.bbox);
             const d = dist(detCenter, person.center);
-            const score = d + (1 - iou) * 200;
             
-            if (iou > TRACKER_CONFIG.iouThreshold || d < TRACKER_CONFIG.maxDistance) {
+            // 综合评分：距离权重更高（适合密集场景）
+            const score = d * 0.7 + (1 - iou) * 150;
+            
+            // 只要不太远就尝试匹配
+            if (d < TRACKER_CONFIG.maxDistance) {
                 if (score < bestScore) {
                     bestScore = score;
                     bestMatch = pid;
@@ -208,13 +212,14 @@ function matchDetections(detections, frameHeight) {
             matchedPersons.add(bestMatch);
             updatePerson(peopleTracker.get(bestMatch), det, frameHeight);
         } else {
+            // 新增追踪者时，只检查是否与未匹配的人太近
             let tooClose = false;
             for (const p of peopleTracker.values()) {
-                if (dist(detCenter, p.center) < TRACKER_CONFIG.maxDistance * 0.5) {
+                if (!matchedPersons.has(p.id) && dist(detCenter, p.center) < TRACKER_CONFIG.maxDistance * 0.3) {
                     tooClose = true; break;
                 }
             }
-            if (!tooClose) {
+            if (!tooClose && peopleTracker.size < 50) { // 限制最多追踪50人
                 registerPerson(det, frameHeight);
             }
         }
