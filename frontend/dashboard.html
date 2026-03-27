@@ -205,6 +205,7 @@
                     <h3>实时客流监控</h3>
                     <div class="video-container" id="videoContainer">
                         <video id="cameraVideo" autoplay playsinline muted></video>
+                        <canvas id="detectionCanvas" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none;"></canvas>
                         <div class="video-overlay" id="videoOverlay">
                             <p>📹 点击下方按钮开启实时客流分析</p>
                             <button class="submit-btn" onclick="startCamera()">📷 开启摄像头</button>
@@ -651,10 +652,11 @@
         .status.pending { background: #fff3cd; color: #856404; }
         .video-placeholder { height: 300px; background: #f5f5f7; border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
         .video-container { position: relative; height: 360px; background: #000; border-radius: 12px; overflow: hidden; }
-        #cameraVideo { width: 100%; height: 100%; object-fit: cover; }
-        .video-overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); display: flex; flex-direction: column; align-items: center; justify-content: center; color: #fff; }
+        #cameraVideo { width: 100%; height: 100%; object-fit: cover; z-index: 1; position: relative; }
+        #detectionCanvas { z-index: 2; }
+        .video-overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); display: flex; flex-direction: column; align-items: center; justify-content: center; color: #fff; z-index: 3; }
         .video-overlay p { margin-bottom: 20px; font-size: 16px; }
-        .stats-overlay { position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.7); padding: 15px; border-radius: 10px; display: flex; gap: 20px; }
+        .stats-overlay { position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.7); padding: 15px; border-radius: 10px; display: flex; gap: 20px; z-index: 4; }
         .stats-overlay .stat-item { display: flex; flex-direction: column; align-items: center; }
         .stats-overlay .stat-label { font-size: 12px; color: #aaa; }
         .stats-overlay .stat-value { font-size: 24px; font-weight: bold; color: #fff; }
@@ -1204,9 +1206,6 @@
         // ========================================
         let videoStream = null;
         let detectionInterval = null;
-        let enterCount = 0;
-        let exitCount = 0;
-        let shopCount = 0;
 
         async function startCamera() {
             const video = document.getElementById('cameraVideo');
@@ -1299,9 +1298,9 @@
         }
 
         function updateStats() {
-            document.getElementById('enterCount').textContent = enterCount;
-            document.getElementById('shopCount').textContent = shopCount;
-            document.getElementById('exitCount').textContent = exitCount;
+            document.getElementById('enterCount').textContent = window.getEnterCount ? window.getEnterCount() : 0;
+            document.getElementById('shopCount').textContent = window.getShopCount ? window.getShopCount() : 0;
+            document.getElementById('exitCount').textContent = window.getExitCount ? window.getExitCount() : 0;
         }
 
         // 页面关闭时清理资源
@@ -1342,6 +1341,43 @@
                 }
             }
         });
+    </script>
+
+    <!-- TensorFlow.js 和客流检测 -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.10.0/dist/tf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@2.2.2/dist/coco-ssd.min.js"></script>
+    <script src="js/people-detection.js"></script>
+
+    <script>
+        // 增强版 toggleDetection - 调用真实 AI 检测
+        let _originalToggle = toggleDetection;
+        let realDetectionActive = false;
+
+        async function toggleDetection() {
+            const video = document.getElementById('cameraVideo');
+
+            if (!videoStream) {
+                showToast('❌ 请先开启摄像头', 'error');
+                return;
+            }
+
+            if (realDetectionActive) {
+                // 停止真实检测
+                stopDetection();
+                if (detectionInterval) {
+                    clearInterval(detectionInterval);
+                    detectionInterval = null;
+                }
+                realDetectionActive = false;
+                showToast('🤖 AI客流分析已停止', 'info');
+                return;
+            }
+
+            // 启动真实 AI 检测
+            showToast('🤖 正在启动 AI 客流分析...', 'info');
+            await startRealDetection();
+            realDetectionActive = true;
+        }
     </script>
 </body>
 </html>
