@@ -113,18 +113,25 @@ function registerPerson(detection, frameHeight) {
     const c = getCenter(bbox);
     const pos = getPosition(c.y, frameHeight);
     
+    // 如果在中间或下方区域，直接计入在店人数
+    const wasCounted = (pos === 'middle' || pos === 'bottom');
+    if (wasCounted) {
+        activePeopleInStore++;
+        console.log('[注册] #' + nextPersonId + ' 在店内，activePeopleInStore=' + activePeopleInStore);
+    }
+    
     const person = {
         id: nextPersonId++,
         bbox: [...bbox],
         center: {...c},
         position: pos,
         disappeared: 0,
-        counted: {enter: false, exit: false},
+        counted: {enter: wasCounted, exit: false}, // 中间/下方区域的人视为已计入
         firstSeen: Date.now()
     };
     
     peopleTracker.set(person.id, person);
-    console.log('[注册] #' + person.id + ' 位置:' + pos + ' 累计追踪:' + peopleTracker.size);
+    console.log('[注册] #' + person.id + ' 位置:' + pos + ' 在店:' + activePeopleInStore + ' 累计追踪:' + peopleTracker.size);
     return person;
 }
 
@@ -409,6 +416,11 @@ function stopDetection() {
     if (ctx2d && canvas) ctx2d.clearRect(0, 0, canvas.width, canvas.height);
     peopleTracker.clear();
     nextPersonId = 1;
+    // 重置计数器
+    activePeopleInStore = 0;
+    totalEntered = 0;
+    totalExited = 0;
+    console.log('[停止] 检测已停止，计数器已重置');
 }
 
 function recordFlow() {
@@ -425,18 +437,12 @@ function recordFlow() {
 }
 
 function restoreFlow() {
+    // 每次开始新的检测会话时，不恢复之前的计数，从0开始
+    // 只保留历史记录用于导出
     try {
         const s = localStorage.getItem('cfh');
         if (s) {
             detectionHistory = JSON.parse(s);
-            const today = new Date().toDateString();
-            const todayRecs = detectionHistory.filter(r => new Date(r.time).toDateString() === today);
-            if (todayRecs.length > 0) {
-                const last = todayRecs[todayRecs.length-1];
-                totalEntered = last.enterToday || 0;
-                totalExited = last.exitToday || 0;
-                activePeopleInStore = last.inShop || 0;
-            }
         }
     } catch(e) {}
 }
