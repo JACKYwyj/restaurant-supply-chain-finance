@@ -1206,7 +1206,9 @@
         // 实时摄像头功能
         // ========================================
         var videoStream = null;
-        var detectionInterval = null;
+        var canvas = null;
+        var ctx2d = null;
+        var histInterval = null;
 
         async function startCamera() {
             const video = document.getElementById('cameraVideo');

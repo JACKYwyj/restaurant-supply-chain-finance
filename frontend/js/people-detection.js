@@ -240,12 +240,8 @@ function matchDetections(detections, frameHeight) {
 }
 
 // ==================== 检测循环 ====================
-
-let videoStream = null;
-let canvas = null;
-let ctx2d = null;
-let histInterval = null;
-let lastChartUpdate = 0;
+// 注意：videoStream, canvas, ctx2d, histInterval 由 dashboard.html 统一管理（var声明）
+// 不要在这里用 let 重复声明！
 
 async function startCamera() {
     const video = document.getElementById('cameraVideo');
